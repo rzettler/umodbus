@@ -10,28 +10,22 @@
 
 # system packages
 # import random
-import struct
-import socket
-import time
+from .sys_imports import socket, struct, time
+from .sys_imports import Optional, Tuple, Union
 
 # custom packages
-from . import functions
-from . import const as Const
-from .common import Request, CommonModbusFunctions
-from .common import ModbusException
+from . import functions, const as Const
+from .common import ModbusException, Request, CommonModbusFunctions
 from .modbus import Modbus
-
-# typing not natively supported on MicroPython
-from .typing import Optional, Tuple, Union
 
 
 class ModbusTCP(Modbus):
     """Modbus TCP client class"""
-    def __init__(self):
+    def __init__(self, addr_list = None):
         super().__init__(
-            # set itf to TCPServer object, addr_list to None
+            # set itf to TCPServer object
             TCPServer(),
-            None
+            addr_list
         )
 
     def bind(self,
@@ -62,30 +56,21 @@ class ModbusTCP(Modbus):
         except Exception:
             return False
 
+class CommonTCPFunctions(object):
+    """Common Functions for Modbus TCP Servers"""
 
-class TCP(CommonModbusFunctions):
-    """
-    TCP class handling socket connections and parsing the Modbus data
-
-    :param      slave_ip:    IP of this device listening for requests
-    :type       slave_ip:    str
-    :param      slave_port:  Port of this device
-    :type       slave_port:  int
-    :param      timeout:     Socket timeout in seconds
-    :type       timeout:     float
-    """
     def __init__(self,
                  slave_ip: str,
                  slave_port: int = 502,
                  timeout: float = 5.0):
-        self._sock = socket.socket()
+        self._slave_ip, self._slave_port = slave_ip, slave_port
         self.trans_id_ctr = 0
+        self.timeout = timeout
+        self.is_connected = False
 
-        # print(socket.getaddrinfo(slave_ip, slave_port))
-        # [(2, 1, 0, '192.168.178.47', ('192.168.178.47', 502))]
-        self._sock.connect(socket.getaddrinfo(slave_ip, slave_port)[0][-1])
-
-        self._sock.settimeout(timeout)
+    @property
+    def connected(self) -> bool:
+        return self.is_connected
 
     def _create_mbap_hdr(self,
                          slave_addr: int,
@@ -157,6 +142,36 @@ class TCP(CommonModbusFunctions):
             (Const.MBAP_HDR_LENGTH + 1)
 
         return response[hdr_length:]
+
+class TCP(CommonTCPFunctions, CommonModbusFunctions):
+    """
+    TCP class handling socket connections and parsing the Modbus data
+
+    :param      slave_ip:    IP of this device listening for requests
+    :type       slave_ip:    str
+    :param      slave_port:  Port of this device
+    :type       slave_port:  int
+    :param      timeout:     Socket timeout in seconds
+    :type       timeout:     float
+    """
+    def __init__(self,
+                 slave_ip: str,
+                 slave_port: int = 502,
+                 timeout: float = 5.0):
+        super().__init__(slave_ip=slave_ip,
+                         slave_port=slave_port,
+                         timeout=timeout)
+
+        self._sock = socket.socket()
+
+    def connect(self) -> None:
+        """Binds the IP and port for incoming requests."""
+        # print(socket.getaddrinfo(slave_ip, slave_port))
+        # [(2, 1, 0, '192.168.178.47', ('192.168.178.47', 502))]
+        self._sock.settimeout(self.timeout)
+
+        self._sock.connect(socket.getaddrinfo(self._slave_ip, self._slave_port)[0][-1])
+        self.is_connected = True
 
     def _send_receive(self,
                       slave_addr: int,
@@ -352,18 +367,15 @@ class TCPServer(object):
                 req_header_no_uid = req[:Const.MBAP_HDR_LENGTH - 1]
                 self._req_tid, req_pid, req_len = struct.unpack('>HHH', req_header_no_uid)
                 req_uid_and_pdu = req[Const.MBAP_HDR_LENGTH - 1:Const.MBAP_HDR_LENGTH + req_len - 1]
+                
+                if (req_pid != 0):
+                    raise Exception("PID does not match:", req_pid)
             except OSError:
                 # MicroPython raises an OSError instead of socket.timeout
                 # print("Socket OSError aka TimeoutError: {}".format(e))
                 return None
             except Exception:
                 # print("Modbus request error:", e)
-                self._client_sock.close()
-                self._client_sock = None
-                return None
-
-            if (req_pid != 0):
-                # print("Modbus request error: PID not 0")
                 self._client_sock.close()
                 self._client_sock = None
                 return None
