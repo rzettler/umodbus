@@ -9,11 +9,8 @@
 #
 
 # system packages
-from machine import UART
-from machine import Pin
-import struct
-import time
-import machine
+from .sys_imports import struct, time, machine, UART, Pin
+from .sys_imports import List, Optional, Union
 
 # custom packages
 from . import const as Const
@@ -21,9 +18,6 @@ from . import functions
 from .common import Request, CommonModbusFunctions
 from .common import ModbusException
 from .modbus import Modbus
-
-# typing not natively supported on MicroPython
-from .typing import List, Optional, Union
 
 
 class ModbusRTU(Modbus):
@@ -263,8 +257,8 @@ class Serial(CommonModbusFunctions):
             self._ctrlPin(0)
 
     def _send_receive(self,
-                      modbus_pdu: bytes,
                       slave_addr: int,
+                      modbus_pdu: bytes,
                       count: bool) -> bytes:
         """
         Send a modbus message and receive the reponse.

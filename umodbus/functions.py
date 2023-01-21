@@ -9,14 +9,10 @@
 #
 
 # system packages
-import struct
+from .sys_imports import struct, List, Optional, Union
 
 # custom packages
 from . import const as Const
-
-# typing not natively supported on MicroPython
-from .typing import List, Optional, Union
-
 
 def read_coils(starting_address: int, quantity: int) -> bytes:
     """
@@ -351,6 +347,8 @@ def response(function_code: int,
                            function_code,
                            request_register_addr,
                            request_register_qty)
+
+    return b''
 
 
 def exception_response(function_code: int, exception_code: int) -> bytes:

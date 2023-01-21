@@ -10,7 +10,20 @@
 # Description summary taken from
 # https://modbus.org/docs/Modbus_Application_Protocol_V1_1b3.pdf
 
-from micropython import const
+try:
+    from micropython import const
+except ImportError:
+    const = lambda x: x
+
+# request types
+READ = const('READ')
+WRITE = const('WRITE')
+
+# datablock names
+ISTS = const('ISTS')
+COILS = const('COILS')
+HREGS = const('HREGS')
+IREGS = const('IREGS')
 
 # function codes
 # defined as const(), see https://github.com/micropython/micropython/issues/573

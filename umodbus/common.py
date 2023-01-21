@@ -9,14 +9,11 @@
 #
 
 # system packages
-import struct
+from .sys_imports import struct
+from .sys_imports import List, Optional, Tuple, Union
 
 # custom packages
-from . import const as Const
-from . import functions
-
-# typing not natively supported on MicroPython
-from .typing import List, Optional, Tuple, Union
+from . import functions, const as Const
 
 
 class Request(object):
@@ -390,3 +387,9 @@ class CommonModbusFunctions(object):
         )
 
         return operation_status
+
+    def _send_receive(self,
+                      slave_addr: int,
+                      modbus_pdu: bytes,
+                      count: bool) -> bytes:
+        pass
