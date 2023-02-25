@@ -125,6 +125,9 @@ coil_status = host.read_coils(
 print('Status of coil {}: {}'.format(coil_status, coil_address))
 ```
 
+For further details check the latest
+[MicroPython Modbus TCP documentation example][ref-latest-tcp-docs-example]
+
 #### RTU
 
 ```python
@@ -151,6 +154,9 @@ coil_status = host.read_coils(
     coil_qty=coil_qty)
 print('Status of coil {}: {}'.format(coil_address, coil_status))
 ```
+
+For further details check the latest
+[MicroPython Modbus RTU documentation example][ref-latest-rtu-docs-example]
 
 ### Install additional MicroPython packages
 
@@ -207,6 +213,8 @@ of this library.
 [ref-rtd-micropython-modbus]: https://micropython-modbus.readthedocs.io/en/latest/
 [ref-remote-upy-shell]: https://github.com/dhylands/rshell
 [ref-examples-folder]: https://github.com/brainelectronics/micropython-modbus/tree/develop/examples
+[ref-latest-rtu-docs-example]: https://micropython-modbus.readthedocs.io/en/latest/EXAMPLES.html#rtu
+[ref-latest-tcp-docs-example]: https://micropython-modbus.readthedocs.io/en/latest/EXAMPLES.html#tcp
 [ref-package-boot-file]: https://github.com/brainelectronics/micropython-modbus/blob/c45d6cc334b4adf0e0ffd9152c8f08724e1902d9/boot.py
 [ref-package-main-file]: https://github.com/brainelectronics/micropython-modbus/blob/c45d6cc334b4adf0e0ffd9152c8f08724e1902d9/main.py
 [ref-github-be-mircopython-modules]: https://github.com/brainelectronics/micropython-modules

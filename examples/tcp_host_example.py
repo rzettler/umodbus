@@ -190,6 +190,8 @@ input_status = host.read_discrete_inputs(
 print('Status of IST {}: {}'.format(ist_address, input_status))
 time.sleep(1)
 
+print()
+
 # READ IREGS
 ireg_address = register_definitions['IREGS']['EXAMPLE_IREG']['register']
 register_qty = register_definitions['IREGS']['EXAMPLE_IREG']['len']

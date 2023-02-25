@@ -37,11 +37,52 @@ except AttributeError:
 # check MicroPython UART documentation
 # https://docs.micropython.org/en/latest/library/machine.UART.html
 # for Device/Port specific setup
+#
 # RP2 needs "rtu_pins = (Pin(4), Pin(5))" whereas ESP32 can use any pin
-# the following example is for an ESP32
+# the following example is for an ESP32.
+# For further details check the latest MicroPython Modbus RTU documentation
+# example https://micropython-modbus.readthedocs.io/en/latest/EXAMPLES.html#rtu
 rtu_pins = (25, 26)         # (TX, RX)
 slave_addr = 10             # address on bus as client
 baudrate = 9600
+uart_id = 1
+
+try:
+    from machine import Pin
+    import os
+    from umodbus import version
+
+    os_info = os.uname()
+    print('MicroPython infos: {}'.format(os_info))
+    print('Used micropthon-modbus version: {}'.format(version.__version__))
+
+    if 'pyboard' in os_info:
+        # NOT YET TESTED !
+        # https://docs.micropython.org/en/latest/library/pyb.UART.html#pyb-uart
+        # (TX, RX) = (X9, X10) = (PB6, PB7)
+        uart_id = 1
+        # (TX, RX)
+        rtu_pins = (Pin(PB6), Pin(PB7))     # noqa: F821
+    elif 'esp8266' in os_info:
+        # https://docs.micropython.org/en/latest/esp8266/quickref.html#uart-serial-bus
+        raise Exception(
+            'UART0 of ESP8266 is used by REPL, UART1 can only be used for TX'
+        )
+    elif 'esp32' in os_info:
+        # https://docs.micropython.org/en/latest/esp32/quickref.html#uart-serial-bus
+        uart_id = 1
+        rtu_pins = (25, 26)             # (TX, RX)
+    elif 'rp2' in os_info:
+        # https://docs.micropython.org/en/latest/rp2/quickref.html#uart-serial-bus
+        uart_id = 0
+        rtu_pins = (Pin(0), Pin(1))     # (TX, RX)
+except AttributeError:
+    pass
+except Exception as e:
+    raise e
+
+print('Using pins {} with UART ID {}'.format(rtu_pins, uart_id))
+
 client = ModbusRTU(
     addr=slave_addr,        # address on bus
     pins=rtu_pins,          # given as tuple (TX, RX)
@@ -50,7 +91,7 @@ client = ModbusRTU(
     # stop_bits=1,          # optional, default 1
     # parity=None,          # optional, default None
     # ctrl_pin=12,          # optional, control DE/RE
-    # uart_id=1             # optional, see port specific documentation
+    uart_id=uart_id         # optional, default 1, see port specific docs
 )
 
 if IS_DOCKER_MICROPYTHON:
