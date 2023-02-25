@@ -12,7 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 -->
 
-<!-- ## [Unreleased] -->
+## [Unreleased]
+## [2.3.4] - 2023-02-25
+### Added
+- Support for asynchronous TCP and RTU/Serial servers and clients, through the `asynchronous` package, see #5
+### Fixed
+- flake8 errors in both synchronous and asynchronous versions (line too long, incorrect indent level, etc.)
+- Multiple connections can now be handled by TCP servers through async implementation, see #11
+### Changed
+- **Breaking:** Renamed `Serial` class to `RTUServer` to match `TCPServer` terminology
+
 
 ## Released
 ## [2.3.3] - 2023-01-29
