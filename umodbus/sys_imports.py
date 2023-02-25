@@ -18,18 +18,12 @@ except ImportError:
     Pin = __unresolved_import()
     UART = __unresolved_import()
 
-try:
-    from typing import List, Optional, Tuple, Union, Literal
-    from typing import Callable, Coroutine, Any, KeysView
-    from typing import Dict, Awaitable
-except ImportError:
-    # typing not natively supported on MicroPython
-    from .typing import List, Optional, Tuple, Union, Literal
-    from .typing import Callable, Coroutine, Any, KeysView
-    from .typing import Dict, Awaitable
+from .typing import List, Optional, Tuple, Union, Literal
+from .typing import Callable, Coroutine, Any, KeysView
+from .typing import Dict, Awaitable, overload
 
 __all__ = ["machine", "socket", "struct", "time",
            "List", "KeysView", "Optional", "Tuple",
            "Union", "Literal", "Callable", "Coroutine",
-           "Any", "Dict", "Awaitable", "UART",
-           "Pin"]
+           "overload", "Any", "Dict", "Awaitable",
+           "UART", "Pin"]

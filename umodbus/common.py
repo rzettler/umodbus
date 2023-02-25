@@ -10,7 +10,7 @@
 
 # system packages
 from .sys_imports import struct
-from .sys_imports import List, Optional, Tuple, Union
+from .sys_imports import List, Optional, Union
 
 # custom packages
 from . import functions, const as Const
@@ -30,7 +30,8 @@ class Request(object):
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
 
             self.data = None
-        elif self.function in [Const.READ_HOLDING_REGISTERS, Const.READ_INPUT_REGISTER]:
+        elif self.function in [Const.READ_HOLDING_REGISTERS,
+                               Const.READ_INPUT_REGISTER]:
             self.quantity = struct.unpack_from('>H', data, 4)[0]
 
             if self.quantity < 0x0001 or self.quantity > 0x007D:
@@ -173,7 +174,7 @@ class CommonModbusFunctions(object):
                                slave_addr: int,
                                starting_addr: int,
                                register_qty: int,
-                               signed: bool = True) -> Tuple[int, ...]:
+                               signed: bool = True) -> bytes:
         """
         Read holding registers (HREGS).
 
@@ -187,7 +188,7 @@ class CommonModbusFunctions(object):
         :type       signed:         bool
 
         :returns:   State of read holding register as tuple
-        :rtype:     Tuple[int, ...]
+        :rtype:     bytes
         """
         modbus_pdu = functions.read_holding_registers(
             starting_address=starting_addr,
@@ -205,7 +206,7 @@ class CommonModbusFunctions(object):
                              slave_addr: int,
                              starting_addr: int,
                              register_qty: int,
-                             signed: bool = True) -> Tuple[int, ...]:
+                             signed: bool = True) -> bytes:
         """
         Read input registers (IREGS).
 
@@ -219,7 +220,7 @@ class CommonModbusFunctions(object):
         :type       signed:         bool
 
         :returns:   State of read input register as tuple
-        :rtype:     Tuple[int, ...]
+        :rtype:     bytes
         """
         modbus_pdu = functions.read_input_registers(
             starting_address=starting_addr,
@@ -392,4 +393,4 @@ class CommonModbusFunctions(object):
                       slave_addr: int,
                       modbus_pdu: bytes,
                       count: bool) -> bytes:
-        pass
+        raise NotImplementedError("Must be overridden by subclass")

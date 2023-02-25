@@ -20,8 +20,8 @@ class AsyncRequest(Request):
     """Asynchronously deconstruct request data received via TCP or Serial"""
 
     async def send_response(self,
-                      values: Optional[list] = None,
-                      signed: bool = True) -> None:
+                            values: Optional[list] = None,
+                            signed: bool = True) -> None:
         """
         Send a response via the configured interface.
 
@@ -30,14 +30,15 @@ class AsyncRequest(Request):
         :param      signed:  Indicates if signed values are used
         :type       signed:  bool
         """
-        await self._itf.send_response(self.unit_addr,
+        await self._itf.send_response(self,
+                                      self.unit_addr,
                                       self.function,
                                       self.register_addr,
                                       self.quantity,
                                       self.data,
                                       values,
                                       signed)
-        
+
     async def send_exception(self, exception_code: int) -> None:
         """
         Send an exception response.
@@ -45,7 +46,8 @@ class AsyncRequest(Request):
         :param      exception_code:  The exception code
         :type       exception_code:  int
         """
-        await self._itf.send_exception_response(self.unit_addr,
+        await self._itf.send_exception_response(self,
+                                                self.unit_addr,
                                                 self.function,
                                                 exception_code)
 
@@ -54,9 +56,9 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
     """Common Async Modbus functions"""
 
     async def read_coils(self,
-                   slave_addr: int,
-                   starting_addr: int,
-                   coil_qty: int) -> List[bool]:
+                         slave_addr: int,
+                         starting_addr: int,
+                         coil_qty: int) -> List[bool]:
         """@see CommonModbusFunctions.read_coils"""
 
         modbus_pdu = functions.read_coils(starting_address=starting_addr,
@@ -72,9 +74,9 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return status_pdu
 
     async def read_discrete_inputs(self,
-                             slave_addr: int,
-                             starting_addr: int,
-                             input_qty: int) -> List[bool]:
+                                   slave_addr: int,
+                                   starting_addr: int,
+                                   input_qty: int) -> List[bool]:
         """@see CommonModbusFunctions.read_discrete_inputs"""
 
         modbus_pdu = functions.read_discrete_inputs(
@@ -91,10 +93,10 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return status_pdu
 
     async def read_holding_registers(self,
-                               slave_addr: int,
-                               starting_addr: int,
-                               register_qty: int,
-                               signed: bool = True) -> Tuple[int, ...]:
+                                     slave_addr: int,
+                                     starting_addr: int,
+                                     register_qty: int,
+                                     signed: bool = True) -> Tuple[int, ...]:
         """@see CommonModbusFunctions.read_holding_registers"""
 
         modbus_pdu = functions.read_holding_registers(
@@ -110,10 +112,10 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return register_value
 
     async def read_input_registers(self,
-                             slave_addr: int,
-                             starting_addr: int,
-                             register_qty: int,
-                             signed: bool = True) -> Tuple[int, ...]:
+                                   slave_addr: int,
+                                   starting_addr: int,
+                                   register_qty: int,
+                                   signed: bool = True) -> Tuple[int, ...]:
         """@see CommonModbusFunctions.read_input_registers"""
 
         modbus_pdu = functions.read_input_registers(
@@ -129,9 +131,9 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return register_value
 
     async def write_single_coil(self,
-                          slave_addr: int,
-                          output_address: int,
-                          output_value: Union[int, bool]) -> bool:
+                                slave_addr: int,
+                                output_address: int,
+                                output_value: Union[int, bool]) -> bool:
         """@see CommonModbusFunctions.write_single_coil"""
 
         modbus_pdu = functions.write_single_coil(output_address=output_address,
@@ -154,10 +156,10 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return operation_status
 
     async def write_single_register(self,
-                              slave_addr: int,
-                              register_address: int,
-                              register_value: int,
-                              signed: bool = True) -> bool:
+                                    slave_addr: int,
+                                    register_address: int,
+                                    register_value: int,
+                                    signed: bool = True) -> bool:
         """@see CommonModbusFunctions.write_single_register"""
 
         modbus_pdu = functions.write_single_register(
@@ -166,8 +168,8 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
             signed=signed)
 
         response = await self._send_receive(slave_addr=slave_addr,
-                                      modbus_pdu=modbus_pdu,
-                                      count=False)
+                                            modbus_pdu=modbus_pdu,
+                                            count=False)
 
         if response is None:
             return False
@@ -182,9 +184,9 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return operation_status
 
     async def write_multiple_coils(self,
-                             slave_addr: int,
-                             starting_address: int,
-                             output_values: List[Union[int, bool]]) -> bool:
+                                   slave_addr: int,
+                                   starting_address: int,
+                                   output_values: list) -> bool:
         """@see CommonModbusFunctions.write_multiple_coils"""
 
         modbus_pdu = functions.write_multiple_coils(
@@ -207,10 +209,10 @@ class CommonAsyncModbusFunctions(CommonModbusFunctions):
         return operation_status
 
     async def write_multiple_registers(self,
-                                 slave_addr: int,
-                                 starting_address: int,
-                                 register_values: List[int],
-                                 signed: bool = True) -> bool:
+                                       slave_addr: int,
+                                       starting_address: int,
+                                       register_values: List[int],
+                                       signed: bool = True) -> bool:
         """@see CommonModbusFunctions.write_multiple_registers"""
 
         modbus_pdu = functions.write_multiple_registers(

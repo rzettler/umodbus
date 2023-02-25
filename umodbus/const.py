@@ -13,17 +13,18 @@
 try:
     from micropython import const
 except ImportError:
-    const = lambda x: x
+    def const(x):
+        return x
 
 # request types
-READ = const('READ')
-WRITE = const('WRITE')
+READ = 'READ'
+WRITE = 'WRITE'
 
 # datablock names
-ISTS = const('ISTS')
-COILS = const('COILS')
-HREGS = const('HREGS')
-IREGS = const('IREGS')
+ISTS = 'ISTS'
+COILS = 'COILS'
+HREGS = 'HREGS'
+IREGS = 'IREGS'
 
 # function codes
 # defined as const(), see https://github.com/micropython/micropython/issues/573

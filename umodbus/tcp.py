@@ -11,7 +11,7 @@
 # system packages
 # import random
 from .sys_imports import socket, struct, time
-from .sys_imports import Optional, Tuple, Union
+from .sys_imports import Optional, Tuple, List, Union
 
 # custom packages
 from . import functions, const as Const
@@ -21,7 +21,7 @@ from .modbus import Modbus
 
 class ModbusTCP(Modbus):
     """Modbus TCP client class"""
-    def __init__(self, addr_list = None):
+    def __init__(self, addr_list: Optional[List[int]] = None):
         super().__init__(
             # set itf to TCPServer object
             TCPServer(),
@@ -55,6 +55,7 @@ class ModbusTCP(Modbus):
             return self._itf.get_is_bound()
         except Exception:
             return False
+
 
 class CommonTCPFunctions(object):
     """Common Functions for Modbus TCP Servers"""
@@ -143,6 +144,7 @@ class CommonTCPFunctions(object):
 
         return response[hdr_length:]
 
+
 class TCP(CommonTCPFunctions, CommonModbusFunctions):
     """
     TCP class handling socket connections and parsing the Modbus data
@@ -170,7 +172,8 @@ class TCP(CommonTCPFunctions, CommonModbusFunctions):
         # [(2, 1, 0, '192.168.178.47', ('192.168.178.47', 502))]
         self._sock.settimeout(self.timeout)
 
-        self._sock.connect(socket.getaddrinfo(self._slave_ip, self._slave_port)[0][-1])
+        self._sock.connect(socket.getaddrinfo(self._slave_ip,
+                                              self._slave_port)[0][-1])
         self.is_connected = True
 
     def _send_receive(self,
@@ -207,8 +210,8 @@ class TCP(CommonTCPFunctions, CommonModbusFunctions):
 class TCPServer(object):
     """Modbus TCP host class"""
     def __init__(self):
-        self._sock = None
-        self._client_sock = None
+        self._sock: socket.socket = None
+        self._client_sock: socket.socket = None
         self._is_bound = False
 
     @property
@@ -271,7 +274,12 @@ class TCPServer(object):
         """
         size = len(modbus_pdu)
         fmt = 'B' * size
-        adu = struct.pack('>HHHB' + fmt, self._req_tid, 0, size + 1, slave_addr, *modbus_pdu)
+        adu = struct.pack('>HHHB' + fmt,
+                          self._req_tid,
+                          0,
+                          size + 1,
+                          slave_addr,
+                          *modbus_pdu)
         self._client_sock.send(adu)
 
     def send_response(self,
@@ -328,7 +336,8 @@ class TCPServer(object):
 
     def _accept_request(self,
                         accept_timeout: float,
-                        unit_addr_list: list) -> Union[Request, None]:
+                        unit_addr_list: Optional[List[int]]) \
+            -> Optional[Request]:
         """
         Accept, read and decode a socket based request
 
@@ -365,9 +374,12 @@ class TCPServer(object):
                     return None
 
                 req_header_no_uid = req[:Const.MBAP_HDR_LENGTH - 1]
-                self._req_tid, req_pid, req_len = struct.unpack('>HHH', req_header_no_uid)
-                req_uid_and_pdu = req[Const.MBAP_HDR_LENGTH - 1:Const.MBAP_HDR_LENGTH + req_len - 1]
-                
+                self._req_tid, req_pid, req_len = \
+                    struct.unpack('>HHH', req_header_no_uid)
+
+                req_uid_and_pdu = req[Const.MBAP_HDR_LENGTH - 1:
+                                      Const.MBAP_HDR_LENGTH + req_len - 1]
+
                 if (req_pid != 0):
                     raise Exception("PID does not match:", req_pid)
             except OSError:
@@ -380,7 +392,8 @@ class TCPServer(object):
                 self._client_sock = None
                 return None
 
-            if ((unit_addr_list is not None) and (req_uid_and_pdu[0] not in unit_addr_list)):
+            if ((unit_addr_list is not None) and
+                    (req_uid_and_pdu[0] not in unit_addr_list)):
                 return None
 
             try:
@@ -392,7 +405,7 @@ class TCPServer(object):
                 return None
 
     def get_request(self,
-                    unit_addr_list: Optional[list] = None,
+                    unit_addr_list: Optional[List[int]] = None,
                     timeout: int = None) -> Union[Request, None]:
         """
         Check for request within the specified timeout
@@ -415,7 +428,10 @@ class TCPServer(object):
             elapsed = 0
             while True:
                 if self._client_sock is None:
-                    accept_timeout = None if timeout is None else (timeout - elapsed) / 1000
+                    if timeout is None:
+                        accept_timeout = None
+                    else:
+                        accept_timeout = (timeout - elapsed) / 1000
                 else:
                     accept_timeout = 0
                 req = self._accept_request(accept_timeout, unit_addr_list)

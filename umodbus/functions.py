@@ -14,6 +14,7 @@ from .sys_imports import struct, List, Optional, Union
 # custom packages
 from . import const as Const
 
+
 def read_coils(starting_address: int, quantity: int) -> bytes:
     """
     Create Modbus Protocol Data Unit for reading coils.
@@ -297,13 +298,15 @@ def response(function_code: int,
     :rtype:     bytes
     """
     if function_code in [Const.READ_COILS, Const.READ_DISCRETE_INPUTS]:
-        sectioned_list = [value_list[i:i + 8] for i in range(0, len(value_list), 8)]    # noqa: E501
+        sectioned_list = [
+            value_list[i:i + 8] for i in range(0, len(value_list), 8)
+        ]
 
         output_value = []
         for index, byte in enumerate(sectioned_list):
-            # see https://github.com/brainelectronics/micropython-modbus/issues/22
-            # output = sum(v << i for i, v in enumerate(byte))
-            # see https://github.com/brainelectronics/micropython-modbus/issues/38
+            # https://github.com/brainelectronics/micropython-modbus/issues/22
+            # output = sum(v << i for i, v in enumerate(byte)), see
+            # https://github.com/brainelectronics/micropython-modbus/issues/38
             output = 0
             for bit in byte:
                 output = (output << 1) | bit

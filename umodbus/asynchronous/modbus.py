@@ -13,11 +13,10 @@ This class is inherited by the Modbus client implementations
 """
 
 # system packages
-from ..sys_imports import List, Optional
+from ..sys_imports import List, Optional, Union
 
 # custom packages
 from .common import AsyncRequest
-from .tcp import AsyncTCPServer
 from ..modbus import Modbus
 
 
@@ -25,7 +24,8 @@ class AsyncModbus(Modbus):
     """Modbus register abstraction."""
 
     def __init__(self,
-                 itf: AsyncTCPServer,
+                 # in quotes because of circular import errors
+                 itf: Union["AsyncTCPServer", "AsyncRTUServer"],  # noqa: F821
                  addr_list: Optional[List[int]] = None):
         super().__init__(itf, addr_list)
         self._itf.set_params(addr_list=addr_list, req_handler=self.process)
@@ -42,11 +42,15 @@ class AsyncModbus(Modbus):
                                    reg_type: str) -> None:
         """@see Modbus._process_read_access"""
 
-        await super()._process_read_access(request, reg_type)
+        task = super()._process_read_access(request, reg_type)
+        if task is not None:
+            await task
 
     async def _process_write_access(self,
                                     request: AsyncRequest,
                                     reg_type: str) -> None:
         """@see Modbus._process_write_access"""
 
-        await super()._process_write_access(request, reg_type)
+        task = super()._process_write_access(request, reg_type)
+        if task is not None:
+            await task
