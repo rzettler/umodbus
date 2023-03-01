@@ -59,7 +59,7 @@ class Modbus(object):
         for reg_type in self._changeable_register_types:
             self._changed_registers[reg_type] = dict()
 
-    def process(self, request: Optional[Request]) -> Optional[Awaitable]:
+    def process(self, request: Optional[Request] = None) -> Optional[Awaitable]:
         """
         Process the Modbus requests.
 
