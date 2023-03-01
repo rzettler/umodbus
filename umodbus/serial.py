@@ -52,13 +52,13 @@ class ModbusRTU(Modbus):
                  uart_id: int = 1):
         super().__init__(
             # set itf to Serial object, addr_list to [addr]
-            RTUServer(uart_id=uart_id,
-                      baudrate=baudrate,
-                      data_bits=data_bits,
-                      stop_bits=stop_bits,
-                      parity=parity,
-                      pins=pins,
-                      ctrl_pin=ctrl_pin),
+            Serial(uart_id=uart_id,
+                   baudrate=baudrate,
+                   data_bits=data_bits,
+                   stop_bits=stop_bits,
+                   parity=parity,
+                   pins=pins,
+                   ctrl_pin=ctrl_pin),
             [addr]
         )
 
@@ -153,6 +153,17 @@ class CommonRTUFunctions(object):
     def _form_serial_pdu(self,
                          modbus_pdu: bytes,
                          slave_addr: int) -> bytearray:
+        """
+        Forms the serial PDU from the Modbus PDU and slave address.
+
+        :param      modbus_pdu:     The modbus PDU
+        :type       modbus_pdu:     bytes
+        :param      slave_addr:     The slave address
+        :type       slave_addr:     int
+
+        :returns:   The serial PDU with CRC
+        :rtype      bytearray, optional
+        """
         serial_pdu = bytearray()
         serial_pdu.append(slave_addr)
         serial_pdu.extend(modbus_pdu)
@@ -165,6 +176,18 @@ class CommonRTUFunctions(object):
                        req: bytearray,
                        unit_addr_list: Optional[List[int]]) \
             -> Optional[bytearray]:
+        """
+        Parses a request and, if valid, returns the request body.
+
+        :param      req:                The request to parse 
+        :type       req:                bytearray
+        :param      unit_addr_list:     The unit address list
+        :type       unit_addr_list:     Optional[list]
+
+        :returns:   The request body (i.e. excluding CRC) if it is valid,
+                    or None otherwise.
+        :rtype      bytearray, optional
+        """
         if len(req) < 8 or (unit_addr_list is not None and
                             req[0] not in unit_addr_list):
             return None
@@ -202,6 +225,7 @@ class CommonRTUFunctions(object):
         :type       values:                 Optional[list]
         :param      signed:                 Indicates if signed
         :type       signed:                 bool
+
         :returns:   Request response - None for a synchronous server, or
                     an awaitable for an asynchronous server due to AsyncRequest
         :rtype      Awaitable, optional
@@ -229,6 +253,7 @@ class CommonRTUFunctions(object):
         :type       function_code:   int
         :param      exception_code:  The exception code
         :type       exception_code:  int
+
         :returns:   Request response - None for a synchronous server, or
                     an awaitable for an asynchronous server due to AsyncRequest
         :rtype      Awaitable, optional
@@ -242,7 +267,7 @@ class CommonRTUFunctions(object):
         raise NotImplementedError("Must be overridden by subclasses")
 
 
-class RTUServer(CommonRTUFunctions, CommonModbusFunctions):
+class Serial(CommonRTUFunctions, CommonModbusFunctions):
     def __init__(self,
                  uart_id: int = 1,
                  baudrate: int = 9600,
@@ -277,8 +302,7 @@ class RTUServer(CommonRTUFunctions, CommonModbusFunctions):
                           # timeout_chars=2,  # WiPy only
                           # pins=pins         # WiPy only
                           tx=pins[0],
-                          rx=pins[1]
-                          )
+                          rx=pins[1])
 
         if ctrl_pin is not None:
             self._ctrlPin = Pin(ctrl_pin, mode=Pin.OUT)

@@ -185,17 +185,17 @@ class AsyncTCPServer(TCPServer):
         await writer.drain()
 
     async def send_response(self,
-                            request: AsyncRequest,
                             slave_addr: int,
                             function_code: int,
                             request_register_addr: int,
                             request_register_qty: int,
                             request_data: list,
                             values: Optional[list] = None,
-                            signed: bool = True) -> None:
+                            signed: bool = True,
+                            request: AsyncRequest = None) -> None:
         """
         Asynchronous equivalent to TCPServer.send_response
-        @see TCPServer.send_response for common (trailing) parameters
+        @see TCPServer.send_response for common (leading) parameters
 
         :param      request:     The request to send a response for
         :type       request:     AsyncRequest
@@ -212,10 +212,10 @@ class AsyncTCPServer(TCPServer):
         await self._send(writer, req_tid, modbus_pdu, slave_addr)
 
     async def send_exception_response(self,
-                                      request: AsyncRequest,
                                       slave_addr: int,
                                       function_code: int,
-                                      exception_code: int) -> None:
+                                      exception_code: int,
+                                      request: AsyncRequest = None) -> None:
         """
         Asynchronous equivalent to TCPServer.send_exception_response
         @see TCPServer.send_exception_response for common (trailing) parameters

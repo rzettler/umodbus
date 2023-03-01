@@ -30,14 +30,15 @@ class AsyncRequest(Request):
         :param      signed:  Indicates if signed values are used
         :type       signed:  bool
         """
-        await self._itf.send_response(self,
-                                      self.unit_addr,
-                                      self.function,
-                                      self.register_addr,
-                                      self.quantity,
-                                      self.data,
-                                      values,
-                                      signed)
+
+        await self._itf.send_response(slave_addr=self.unit_addr,
+                                      function_code=self.function,
+                                      request_register_addr=self.register_addr,
+                                      request_register_qty=self.quantity,
+                                      request_data=self.data,
+                                      values=values,
+                                      signed=signed,
+                                      request=self)
 
     async def send_exception(self, exception_code: int) -> None:
         """
@@ -46,10 +47,10 @@ class AsyncRequest(Request):
         :param      exception_code:  The exception code
         :type       exception_code:  int
         """
-        await self._itf.send_exception_response(self,
-                                                self.unit_addr,
-                                                self.function,
-                                                exception_code)
+        await self._itf.send_exception_response(slave_addr=self.unit_addr,
+                                                function_code=self.function,
+                                                exception_code=exception_code,
+                                                request=self)
 
 
 class CommonAsyncModbusFunctions(CommonModbusFunctions):

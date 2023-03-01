@@ -66,7 +66,7 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
         """
         Setup asynchronous Serial/RTU Modbus
 
-        @see RTUServer
+        @see Serial
         """
         self._uart = UART(uart_id,
                           baudrate=baudrate,
@@ -76,8 +76,8 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
                           # timeout_chars=2,  # WiPy only
                           # pins=pins         # WiPy only
                           tx=pins[0],
-                          rx=pins[1]
-                          )
+                          rx=pins[1])
+
         self._uart_reader = asyncio.StreamReader(self._uart)
         self._uart_writer = asyncio.StreamWriter(self._uart, {})
 
@@ -95,7 +95,7 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
             self._t35chars = 1750   # 1750us (approx. 1.75ms)
 
     async def _uart_read(self) -> bytearray:
-        """@see RTUServer._uart_read"""
+        """@see Serial._uart_read"""
 
         response = bytearray()
         wait_period = self._t35chars * US_TO_S
@@ -114,29 +114,9 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
 
         return response
 
-    async def _start_read_into(self, result: bytearray) -> None:
-        """
-        Reads data from UART into an accumulator.
-
-        :param      result:     The accumulator to store data in
-        :type       result:     bytearray
-        """
-
-        try:
-            # while may not be necessary; try removing it and testing
-            while True:
-                # WiPy only
-                # r = self._uart_reader.readall()
-                r = await self._uart_reader.read()
-                if r is not None:
-                    # append the new read stuff to the buffer
-                    result.extend(r)
-        except asyncio.TimeoutError:
-            pass
-
     async def _uart_read_frame(self,
                                timeout: Optional[int] = None) -> bytearray:
-        """@see RTUServer._uart_read_frame"""
+        """@see Serial._uart_read_frame"""
 
         # set timeout to at least twice the time between two
         # frames in case the timeout was set to zero or None
@@ -165,7 +145,7 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
     async def _send(self,
                     modbus_pdu: bytes,
                     slave_addr: int) -> None:
-        """@see RTUServer._send"""
+        """@see Serial._send"""
 
         serial_pdu = self._form_serial_pdu(modbus_pdu, slave_addr)
         send_start_time = 0
@@ -191,7 +171,7 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
                             slave_addr: int,
                             modbus_pdu: bytes,
                             count: bool) -> bytes:
-        """@see RTUServer._send_receive"""
+        """@see Serial._send_receive"""
 
         # flush the Rx FIFO
         await self._uart_reader.read()
@@ -210,28 +190,45 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
                             request_register_qty: int,
                             request_data: list,
                             values: Optional[list] = None,
-                            signed: bool = True) -> None:
-        """@see RTUServer.send_response"""
+                            signed: bool = True,
+                            request: Optional[AsyncRequest] = None) -> None:
+        """
+        Asynchronous equivalent to Serial.send_response
+        @see Serial.send_response for common (leading) parameters
 
-        task = super().send_response(slave_addr,
-                                     function_code,
-                                     request_register_addr,
-                                     request_register_qty,
-                                     request_data,
-                                     values,
-                                     signed)
+        :param      request:     Ignored; kept for compatibility
+                                 with AsyncRequest
+        :type       request:     AsyncRequest, optional
+        """
+
+        task = super().send_response(slave_addr=slave_addr,
+                                     function_code=function_code,
+                                     request_register_addr=request_register_addr,  # noqa: E501
+                                     request_register_qty=request_register_qty,
+                                     request_data=request_data,
+                                     values=values,
+                                     signed=signed)
         if task is not None:
             await task
 
     async def send_exception_response(self,
                                       slave_addr: int,
                                       function_code: int,
-                                      exception_code: int) -> None:
-        """@see RTUServer.send_exception_response"""
+                                      exception_code: int,
+                                      request: Optional[AsyncRequest] = None) \
+            -> None:
+        """
+        Asynchronous equivalent to Serial.send_exception_response
+        @see Serial.send_exception_response for common (leading) parameters
 
-        task = super().send_exception_response(slave_addr,
-                                               function_code,
-                                               exception_code)
+        :param      request:     Ignored; kept for compatibility
+                                 with AsyncRequest
+        :type       request:     AsyncRequest, optional
+        """
+
+        task = super().send_exception_response(slave_addr=slave_addr,
+                                               function_code=function_code,
+                                               exception_code=exception_code)
         if task is not None:
             await task
 
@@ -239,15 +236,15 @@ class AsyncRTUServer(CommonRTUFunctions, CommonAsyncModbusFunctions):
                           unit_addr_list: Optional[List[int]] = None,
                           timeout: Optional[int] = None) -> \
             Optional[AsyncRequest]:
-        """@see RTUServer.get_request"""
+        """@see Serial.get_request"""
 
         req = await self._uart_read_frame(timeout=timeout)
-        req_no_crc = self._parse_request(req, unit_addr_list)
+        req_no_crc = self._parse_request(req=req,
+                                         unit_addr_list=unit_addr_list)
         try:
             if req_no_crc is not None:
                 return AsyncRequest(interface=self, data=req_no_crc)
         except ModbusException as e:
-            await self.send_exception_response(
-                slave_addr=req[0],
-                function_code=e.function_code,
-                exception_code=e.exception_code)
+            await self.send_exception_response(slave_addr=req[0],
+                                               function_code=e.function_code,
+                                               exception_code=e.exception_code)
