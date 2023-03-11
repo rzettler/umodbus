@@ -34,6 +34,6 @@ setup(
     },
     license='MIT',
     cmdclass={'sdist': sdist_upip.sdist},
-    packages=['umodbus'],
+    packages=['umodbus', 'umodbus/asynchronous'],
     install_requires=[]
 )
