@@ -370,7 +370,7 @@ class Serial(CommonRTUFunctions, CommonModbusFunctions):
                 return False
         elif (Const.READ_COILS <= response[1] <= Const.READ_INPUT_REGISTER):
             expected_len = Const.RESPONSE_HDR_LENGTH + 1 + \
-                           response[2] + Const.CRC_LENGTH
+                response[2] + Const.CRC_LENGTH
             if len(response) < expected_len:
                 return False
         elif len(response) < Const.FIXED_RESP_LEN:
