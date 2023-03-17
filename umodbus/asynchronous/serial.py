@@ -14,7 +14,7 @@ try:
 except ImportError:
     import asyncio
 
-from ..sys_imports import time, UART, Pin
+from ..sys_imports import time, Pin
 from ..sys_imports import List, Tuple, Optional, Union
 
 # custom packages
@@ -382,7 +382,7 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
     if device._ctrlPin:
         device._ctrlPin(1)
         # wait 1 ms to ensure control pin has changed
-        await asyncio.sleep(1/1000)
+        await asyncio.sleep(1 / 1000)
         send_start_time = time.ticks_us()
 
     device._uart_writer.write(serial_pdu)
