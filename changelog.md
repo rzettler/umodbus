@@ -23,6 +23,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Released
+## [2.3.4] - 2023-03-20
+### Added
+- `package.json` for `mip` installation with MicroPython v1.19.1 or newer
+- `.editorconfig` for common editor settings
+- `.yamllint` to lint all used YAML files
+- `yamllint` package to the `requirements-test.txt` file
+- Run YAML linter on test workflow
+- Modbus version input field in issues template
+
+### Changed
+- Test workflow is also running on pull requests as the workflow is not executed on branches of contributors
+
+### Fixed
+- YAML style violation in Docker, workflow and issue files
+- `mip` installation commands in `README` and `INSTALLATION`
+
 ## [2.3.3] - 2023-01-29
 ### Fixed
 - Add link to RTU documentation examples from RTU examples files and root [README](README.md), relates to #7
@@ -274,8 +290,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PEP8 style issues on all files of [`lib/uModbus`](lib/uModbus)
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/micropython-modbus/compare/2.3.3...develop
+[Unreleased]: https://github.com/brainelectronics/micropython-modbus/compare/2.3.4...develop
 
+[2.3.4]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.4
 [2.3.3]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.3
 [2.3.2]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.2
 [2.3.1]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.1

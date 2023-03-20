@@ -1,3 +1,5 @@
+---
+
 #
 # build all non-image containers
 # $ docker-compose build
@@ -20,7 +22,8 @@ services:
     expose:
       - "65433"
     ports:
-      - "65433:65433" # reach "micropython-client" at 172.25.0.2:65433, see networks
+      # reach "micropython-client" at 172.25.0.2:65433, see networks
+      - "65433:65433"
     networks:
       serial_bridge:
         # fix IPv4 address to be known and in the MicroPython scripts

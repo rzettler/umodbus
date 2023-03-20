@@ -1,5 +1,9 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+---
+
+# This workflow will install Python dependencies, run tests and lint with a
+# specific Python version
+# For more information see:
+# https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: Test Python package
 
@@ -7,6 +11,10 @@ on:
   push:
     # branches: [ $default-branch ]
     branches-ignore:
+      - 'main'
+      - 'develop'
+  pull_request:
+    branches:
       - 'main'
       - 'develop'
 
@@ -17,46 +25,49 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.9'
-    - name: Install test dependencies
-      run: |
-        pip install -r requirements-test.txt
-    - name: Lint with flake8
-      run: |
-        flake8 .
-    - name: Install deploy dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
-    - name: Execute tests
-      run: |
-        docker build --tag micropython-test --file Dockerfile.tests .
-    - name: Run Client/Host TCP example
-      run: |
-        docker compose up --build --exit-code-from micropython-host
-    - name: Run Client/Host TCP test
-      run: |
-        docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-host
-    - name: Run Client/Host RTU example
-      run: |
-        docker compose -f docker-compose-rtu.yaml up --build --exit-code-from micropython-host
-    - name: Run Client/Host RTU test
-      run: |
-        docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-host
-    - name: Build package
-      run: |
-        changelog2version \
-          --changelog_file changelog.md \
-          --version_file umodbus/version.py \
-          --version_file_type py \
-          --debug
-        python setup.py sdist
-        rm dist/*.orig
-    - name: Test built package
-      run: |
-        twine check dist/*
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements-test.txt
+      - name: Lint with flake8
+        run: |
+          flake8 .
+      - name: Lint with yamllint
+        run: |
+          yamllint .
+      - name: Install deploy dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-deploy.txt ]; then pip install -r requirements-deploy.txt; fi
+      - name: Execute tests
+        run: |
+          docker build --tag micropython-test --file Dockerfile.tests .
+      - name: Run Client/Host TCP example
+        run: |
+          docker compose up --build --exit-code-from micropython-host
+      - name: Run Client/Host TCP test
+        run: |
+          docker compose -f docker-compose-tcp-test.yaml up --build --exit-code-from micropython-host
+      - name: Run Client/Host RTU example
+        run: |
+          docker compose -f docker-compose-rtu.yaml up --build --exit-code-from micropython-host
+      - name: Run Client/Host RTU test
+        run: |
+          docker compose -f docker-compose-rtu-test.yaml up --build --exit-code-from micropython-host
+      - name: Build package
+        run: |
+          changelog2version \
+            --changelog_file changelog.md \
+            --version_file umodbus/version.py \
+            --version_file_type py \
+            --debug
+          python setup.py sdist
+          rm dist/*.orig
+      - name: Test built package
+        run: |
+          twine check dist/*

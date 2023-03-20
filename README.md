@@ -72,7 +72,7 @@ station.active(True)
 station.connect('SSID', 'PASSWORD')
 time.sleep(1)
 print('Device connected to network: {}'.format(station.isconnected()))
-mip.install('micropython-modbus', index='https://pypi.org/pypi')
+mip.install('github:brainelectronics/micropython-modbus')
 print('Installation completed')
 machine.soft_reset()
 ```
@@ -168,7 +168,7 @@ device, connect to a network and install them via `upip` as follows
 ```python
 # with MicroPython version 1.19.1 or newer
 import mip
-mip.install('micropython-brainelectronics-helpers', index='https://pypi.org/pypi')
+mip.install('github:brainelectronics/micropython-modules')
 
 # before MicroPython version 1.19.1
 import upip

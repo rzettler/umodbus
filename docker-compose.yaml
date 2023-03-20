@@ -1,3 +1,5 @@
+---
+
 #
 # build all non-image containers
 # $ docker-compose build
@@ -19,7 +21,8 @@ services:
     expose:
       - "502"
     ports:
-      - "502:502" # reach "micropython-client" at 172.24.0.2:502, see networks
+      # reach "micropython-client" at 172.24.0.2:502, see networks
+      - "502:502"
     networks:
       my_bridge:
         # fix IPv4 address to be known and in the MicroPython scripts

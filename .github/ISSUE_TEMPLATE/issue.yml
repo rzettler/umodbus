@@ -1,3 +1,5 @@
+---
+
 name: "Default issue"
 description: Report any kind of issue
 body:
@@ -13,7 +15,8 @@ body:
     id: reproduction
     attributes:
       label: Reproduction steps
-      description: Please enter an explicit description to reproduce this issue
+      description: |
+        Please enter an explicit description to reproduce this issue
       value: |
         1.
         2.
@@ -49,16 +52,37 @@ body:
     validations:
       required: true
   - type: textarea
+    id: modbus-version
+    attributes:
+      label: MicroPython Modbus version
+      description: Which version of this lib are you using?
+      value: |
+        # e.g. v2.3.3
+        # use the following command to get the used version
+        import os
+        from umodbus import version
+        print('MicroPython infos:', os.uname())
+        print('Used micropthon-modbus version:', version.__version__))
+      render: python
+    validations:
+      required: true
+  - type: textarea
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      description: >
+        Please copy and paste any relevant log output.
+        This will be automatically formatted into code, so no need for
+        backticks.
       render: bash
   - type: textarea
     id: usercode
     attributes:
       label: User code
-      description: Please copy and paste any relevant user code. This will be automatically formatted into Python code, so no need for backticks.
+      description: >
+        Please copy and paste any relevant user code.
+        This will be automatically formatted into Python code, so no need for
+        backticks.
       render: python
   - type: textarea
     id: additional

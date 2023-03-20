@@ -36,25 +36,36 @@ versions check the [upip section below](#install-with-upip)
 	micropython-lib as its index by default.
 ```
 
-As this library is pushed to [PyPi][ref-micropython-modbus-pypi] and
-[TestPyPi][ref-micropython-modbus-test-pypi], but not the default
-[micropython-lib index](https://micropython.org/pi/v2) the additional index
-has to be specified explicitly.
+As this library is not pushed to the default
+[micropython-lib index](https://micropython.org/pi/v2), the installation has
+to be done via the package definition file (`package.json`) provided with this
+repo.
 
 ```python
 import mip
-mip.install('micropython-modbus', index='https://pypi.org/pypi')
+mip.install('github:brainelectronics/micropython-modbus')
 ```
 
-In order to install the latest release candidate version, set the index to
-`'https://test.pypi.org/pypi'`
+In order to install the latest release candidate version, select a version from
+the [repo tags overview][ref-github-micropython-modbus-tags]
 
 ```python
 import mip
-mip.install('micropython-modbus', index='https://test.pypi.org/pypi')
+mip.install('github:brainelectronics/micropython-modbus', version='2.3.3-rc31.dev59')
 ```
 
 ### Install with upip
+
+This library is pushed to [PyPi][ref-micropython-modbus-pypi] and
+[TestPyPi][ref-micropython-modbus-test-pypi]. The installation from those
+package indices is currently not supported with MicroPython v1.19.1 or newer.
+The package can be installed on older MicroPython versions with the following
+commands.
+
+```{note}
+`upip` is not able to install a specific version of a package. It will always
+use the latest available version.
+```
 
 ```python
 import upip
@@ -62,7 +73,7 @@ upip.install('micropython-modbus')
 ```
 
 In order to install the latest release candidate version, use the following
-commands
+commands.
 
 ```python
 import upip
@@ -87,14 +98,14 @@ To install the latest officially released library version use the following
 command
 
 ```bash
-mpremote connect /dev/tty.SLAB_USBtoUART mip install --index https://pypi.org/pypi micropython-modbus
+mpremote connect /dev/tty.SLAB_USBtoUART mip install github:brainelectronics/micropython-modbus
 ```
 
 In order to install the latest release candidate version, use the following
 command
 
 ```bash
-mpremote connect /dev/tty.SLAB_USBtoUART mip install --index https://test.pypi.org/pypi micropython-modbus
+mpremote connect /dev/tty.SLAB_USBtoUART mip install github:brainelectronics/micropython-modbus
 ```
 
 ### Manually
@@ -158,6 +169,7 @@ README for further instructions.
 
 <!-- Links -->
 [ref-micropython-modbus-test-pypi]: https://test.pypi.org/project/micropython-modbus/
+[ref-github-micropython-modbus-tags]: https://github.com/brainelectronics/micropython-modbus/tags
 [ref-micropython-modbus-pypi]: https://pypi.org/project/micropython-modbus/
 [ref-mpremote]: https://docs.micropython.org/en/v1.19.1/reference/mpremote.html#mpremote
 [ref-mpremote-doc]: https://docs.micropython.org/en/v1.19.1/reference/mpremote.html

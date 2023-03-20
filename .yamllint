@@ -1,0 +1,15 @@
+---
+
+extends: default
+
+ignore:
+  - .tox
+  - .venv
+  - .idea
+  - .thinking
+
+rules:
+  line-length:
+    level: warning
+    ignore:
+      - .github/workflows/*
