@@ -1,0 +1,26 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: MicroPython Modbus
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - name: Pycom Limited
+  - given-names: Jonas
+    family-names: Scharpf
+    affiliation: brainelectronics
+  - name: The MicroPython Modbus team
+repository-code: 'https://github.com/brainelectronics/micropython-modbus/'
+url: 'https://brainelectronics.de'
+repository-artifact: 'https://pypi.org/project/micropython-modbus/'
+abstract: A lightweight Modbus TCP/RTU library for Micropython
+keywords:
+  - micropython
+  - modbus
+license: AGPL-3.0
+commit: '2975f78'
+version: 2.3.4
+date-released: '2023-03-20'
