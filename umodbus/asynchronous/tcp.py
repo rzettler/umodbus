@@ -75,7 +75,15 @@ class AsyncTCP(CommonTCPFunctions, CommonAsyncModbusFunctions):
                  slave_ip: str,
                  slave_port: int = 502,
                  timeout: float = 5.0):
-        """Initializes an asynchronous TCP client. @see TCP"""
+        """
+        Initializes an asynchronous TCP client. 
+
+        Warning: Client does not auto-connect on initialization,
+        unlike the synchronous client. Call `connect()` before
+        calling client methods.
+
+        @see TCP
+        """
 
         super().__init__(slave_ip=slave_ip,
                          slave_port=slave_port,
