@@ -165,6 +165,7 @@ class TCP(CommonTCPFunctions, CommonModbusFunctions):
                          timeout=timeout)
 
         self._sock = socket.socket()
+        self.connect()
 
     def connect(self) -> None:
         """Binds the IP and port for incoming requests."""
