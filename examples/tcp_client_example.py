@@ -21,9 +21,13 @@ from umodbus.tcp import ModbusTCP
 
 # import relevant auxiliary script variables
 from .tcp_client_common import local_ip, tcp_port, register_definitions
+from .tcp_client_common import setup_special_cbs
 
 # ModbusTCP can get TCP requests from a host device to provide/set data
 client = ModbusTCP()
+
+# setup remaining callbacks after creating client
+setup_special_cbs(client, register_definitions)
 
 # check whether client has been bound to an IP and port
 is_bound = client.get_bound_status()

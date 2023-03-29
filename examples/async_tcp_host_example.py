@@ -22,7 +22,7 @@ except ImportError:
 
 # import modbus host classes
 from umodbus.asynchronous.tcp import AsyncTCP as ModbusTCPMaster
-from .tcp_host_common import register_definitions, slave_ip, 
+from .tcp_host_common import register_definitions, slave_ip
 from .tcp_host_common import slave_tcp_port, slave_addr, exit
 
 
@@ -137,7 +137,7 @@ async def start_tcp_client(host, port, unit_id, timeout):
     # TCP Master setup
     # act as host, get Modbus data via TCP from a client device
     # ModbusTCPMaster can make TCP requests to a client device to get/set data
-    client = AsyncTCP(
+    client = ModbusTCPMaster(
         slave_ip=host,
         slave_port=port,
         timeout=timeout)
@@ -146,14 +146,10 @@ async def start_tcp_client(host, port, unit_id, timeout):
     await client.connect()
     if client.is_connected:
         print('Requesting and updating data on TCP client at {}:{}'.
-              format(ip, port))
+              format(host, port))
         print()
 
         await run_tests(client, unit_id)
-
-
-def run_tcp_client_test(host, port, unit_id, timeout):
-    host, port, unit_id, timeout))
 
 
 # create and run task

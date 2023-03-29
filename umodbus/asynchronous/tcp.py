@@ -162,9 +162,7 @@ class AsyncTCPServer(TCPServer):
         self.server = await asyncio.start_server(self._accept_request,
                                                  local_ip,
                                                  local_port)
-        self._server_task = asyncio.create_task(self.server.wait_closed())
         self._is_bound = True
-        await self._server_task
 
     async def _send(self,
                     writer: asyncio.StreamWriter,
@@ -337,8 +335,13 @@ class AsyncTCPServer(TCPServer):
         writer.close()
         await writer.wait_closed()
 
+    async def serve_forever(self) -> None:
+        """Waits for the server to close."""
+
+        await self.server.wait_closed()
+
     def server_close(self) -> None:
         """Stops a running server."""
 
         if self._is_bound:
-            self._server_task.cancel()
+            self.server.close()
