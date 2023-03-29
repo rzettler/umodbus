@@ -40,24 +40,7 @@ def my_discrete_inputs_register_get_cb(reg_type, address, val):
     print('Custom callback, called on getting {} at {}, currently: {}'.
           format(reg_type, address, val))
 
-
-def my_inputs_register_get_cb(client):
-    def get_cb(reg_type, address, val):
-        print('Custom callback, called on getting {} at {}, currently: {}'.
-              format(reg_type, address, val))
-
-        # any operation should be as short as possible to avoid response timeouts
-        new_val = val[0] + 1
-
-        # It would be also possible to read the latest ADC value at this time
-        # adc = machine.ADC(12)     # check MicroPython port specific syntax
-        # new_val = adc.read()
-
-        client.set_ireg(address=address, value=new_val)
-        print('Incremented current value by +1 before sending response')
-    return get_cb
-
-
+    
 def setup_special_cbs(client, register_definitions):
     """
     Sets up callbacks which require references to the client and the
