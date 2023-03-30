@@ -23,11 +23,11 @@ except ImportError:
 
 # import modbus client classes
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
-from .common.register_definitions import setup_callbacks
-from .common.rtu_client_common import IS_DOCKER_MICROPYTHON
-from .common.rtu_client_common import register_definitions
-from .common.rtu_client_common import slave_addr, rtu_pins
-from .common.rtu_client_common import baudrate, uart_id, exit
+from common.register_definitions import setup_callbacks
+from common.rtu_client_common import IS_DOCKER_MICROPYTHON
+from common.rtu_client_common import register_definitions
+from common.rtu_client_common import slave_addr, rtu_pins
+from common.rtu_client_common import baudrate, uart_id, exit
 
 
 async def start_rtu_server(slave_addr,

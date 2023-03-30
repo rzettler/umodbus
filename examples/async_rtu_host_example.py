@@ -22,11 +22,11 @@ except ImportError:
     import asyncio
 
 from umodbus.asynchronous.serial import AsyncSerial as ModbusRTUMaster
-from .common.rtu_host_common import IS_DOCKER_MICROPYTHON
-from .common.rtu_host_common import register_definitions
-from .common.rtu_host_common import slave_addr, uart_id
-from .common.rtu_host_common import baudrate, rtu_pins, exit
-from .common.host_tests import run_async_host_tests
+from common.rtu_host_common import IS_DOCKER_MICROPYTHON
+from common.rtu_host_common import register_definitions
+from common.rtu_host_common import slave_addr, uart_id
+from common.rtu_host_common import baudrate, rtu_pins, exit
+from common.host_tests import run_async_host_tests
 
 
 async def start_rtu_host(unit_id,
