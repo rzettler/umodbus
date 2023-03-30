@@ -76,7 +76,7 @@ class AsyncTCP(CommonTCPFunctions, CommonAsyncModbusFunctions):
                  slave_port: int = 502,
                  timeout: float = 5.0):
         """
-        Initializes an asynchronous TCP client. 
+        Initializes an asynchronous TCP client.
 
         Warning: Client does not auto-connect on initialization,
         unlike the synchronous client. Call `connect()` before
