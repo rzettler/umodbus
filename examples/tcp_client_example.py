@@ -17,9 +17,9 @@ the client can be defined by the user.
 from umodbus.tcp import ModbusTCP
 
 # import relevant auxiliary script variables
-from common.register_definitions import register_definitions, setup_callbacks
-from common.tcp_client_common import local_ip, tcp_port
-from common.tcp_client_common import IS_DOCKER_MICROPYTHON
+from examples.common.register_definitions import register_definitions, setup_callbacks
+from examples.common.tcp_client_common import local_ip, tcp_port
+from examples.common.tcp_client_common import IS_DOCKER_MICROPYTHON
 
 # ModbusTCP can get TCP requests from a host device to provide/set data
 client = ModbusTCP()

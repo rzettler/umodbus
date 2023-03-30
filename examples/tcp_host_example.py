@@ -15,9 +15,9 @@ the client can be defined by the user.
 
 # import modbus host classes
 from umodbus.tcp import TCP as ModbusTCPMaster
-from common.register_definitions import register_definitions
-from common.tcp_host_common import slave_ip, slave_tcp_port, slave_addr, exit
-from common.host_tests import run_sync_host_tests
+from examples.common.register_definitions import register_definitions
+from examples.common.tcp_host_common import slave_ip, slave_tcp_port, slave_addr, exit
+from examples.common.host_tests import run_sync_host_tests
 
 # TCP Master setup
 # act as host, get Modbus data via TCP from a client device

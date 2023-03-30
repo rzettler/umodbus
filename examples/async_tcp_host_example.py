@@ -21,10 +21,10 @@ except ImportError:
 
 # import modbus host classes
 from umodbus.asynchronous.tcp import AsyncTCP as ModbusTCPMaster
-from common.register_definitions import register_definitions
-from common.tcp_host_common import slave_ip, slave_tcp_port
-from common.tcp_host_common import slave_addr, exit
-from common.host_tests import run_async_host_tests
+from examples.common.register_definitions import register_definitions
+from examples.common.tcp_host_common import slave_ip, slave_tcp_port
+from examples.common.tcp_host_common import slave_addr, exit
+from examples.common.host_tests import run_async_host_tests
 
 
 async def start_tcp_client(host, port, unit_id, timeout):
