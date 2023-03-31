@@ -73,7 +73,7 @@ class Modbus(object):
         if request is None:
             request = self._itf.get_request(unit_addr_list=self._addr_list,
                                             timeout=0)
-        
+
         # TODO check if request is a Task so that it can hand it off to the
         # asynchronous, i.e. subclass's process() function?
         if request is None:
