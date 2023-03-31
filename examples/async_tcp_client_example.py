@@ -20,10 +20,9 @@ except ImportError:
     import asyncio
 
 from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
+from examples.common.register_definitions import register_definitions, setup_callbacks
 from examples.common.tcp_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.tcp_client_common import register_definitions
 from examples.common.tcp_client_common import local_ip, tcp_port
-from examples.common.register_definitions import setup_callbacks
 
 
 async def start_tcp_server(host, port, backlog, register_definitions):

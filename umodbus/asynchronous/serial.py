@@ -14,8 +14,8 @@ try:
 except ImportError:
     import asyncio
 
-from ..sys_imports import time, Pin
-from ..sys_imports import List, Tuple, Optional, Union
+from ..sys_imports import time, Pin, Callable, Coroutine
+from ..sys_imports import List, Tuple, Optional, Union, Any
 
 # custom packages
 from .common import CommonAsyncModbusFunctions, AsyncRequest
@@ -188,6 +188,14 @@ class AsyncRTUServer(RTUServer):
         await _async_send(device=self,
                           modbus_pdu=modbus_pdu,
                           slave_addr=slave_addr)
+
+    def set_params(self,
+                   addr_list: Optional[List[int]],
+                   req_handler: Callable[[AsyncRequest],
+                                         Coroutine[Any, Any, bool]]) -> None:
+        """Dummy function for common _itf interface"""
+
+        pass
 
 
 class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):

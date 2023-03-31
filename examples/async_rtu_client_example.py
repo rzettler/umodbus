@@ -23,11 +23,10 @@ except ImportError:
 
 # import modbus client classes
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
-from examples.common.register_definitions import setup_callbacks
+from examples.common.register_definitions import register_definitions, setup_callbacks
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_client_common import register_definitions
 from examples.common.rtu_client_common import slave_addr, rtu_pins
-from examples.common.rtu_client_common import baudrate, uart_id, exit
+from examples.common.rtu_client_common import baudrate, uart_id
 
 
 async def start_rtu_server(slave_addr,
@@ -61,8 +60,8 @@ async def start_rtu_server(slave_addr,
 
 
 # create and run task
-task = start_rtu_server(addr=slave_addr,
-                        pins=rtu_pins,          # given as tuple (TX, RX)
+task = start_rtu_server(slave_addr=slave_addr,
+                        rtu_pins=rtu_pins,      # given as tuple (TX, RX)
                         baudrate=baudrate,      # optional, default 9600
                         # data_bits=8,          # optional, default 8
                         # stop_bits=1,          # optional, default 1
@@ -71,4 +70,6 @@ task = start_rtu_server(addr=slave_addr,
                         uart_id=uart_id)        # optional, default 1, see port specific docs
 asyncio.run(task)
 
-exit()
+if IS_DOCKER_MICROPYTHON:
+    import sys
+    sys.exit(0)
