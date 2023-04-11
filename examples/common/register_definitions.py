@@ -8,27 +8,27 @@ callbacks that can be used when setting up the various clients.
 
 
 def my_coil_set_cb(reg_type, address, val):
-    print('Custom callback, called on setting {} at {} to: {}'.
+    print('my_coil_set_cb, called on setting {} at {} to: {}'.
           format(reg_type, address, val))
 
 
 def my_coil_get_cb(reg_type, address, val):
-    print('Custom callback, called on getting {} at {}, currently: {}'.
+    print('my_coil_get_cb, called on getting {} at {}, currently: {}'.
           format(reg_type, address, val))
 
 
 def my_holding_register_set_cb(reg_type, address, val):
-    print('Custom callback, called on setting {} at {} to: {}'.
+    print('my_hr_set_sb, called on setting {} at {} to: {}'.
           format(reg_type, address, val))
 
 
 def my_holding_register_get_cb(reg_type, address, val):
-    print('Custom callback, called on getting {} at {}, currently: {}'.
+    print('my_hr_get_cb, called on getting {} at {}, currently: {}'.
           format(reg_type, address, val))
 
 
 def my_discrete_inputs_register_get_cb(reg_type, address, val):
-    print('Custom callback, called on getting {} at {}, currently: {}'.
+    print('my_di_get_cb, called on getting {} at {}, currently: {}'.
           format(reg_type, address, val))
 
 
@@ -46,7 +46,7 @@ def setup_callbacks(client, register_definitions):
         print('Default values restored')
 
     def my_inputs_register_get_cb(reg_type, address, val):
-        print('Custom callback, called on getting {} at {}, currently: {}'.
+        print('my_ir_get_cb, called on getting {} at {}, currently: {}'.
               format(reg_type, address, val))
 
         # any operation should be as short as possible to avoid response timeouts
