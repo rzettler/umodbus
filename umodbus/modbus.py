@@ -70,14 +70,14 @@ class Modbus(object):
         reg_type = None
         req_type = None
 
+        # for synchronous version
         if request is None:
             request = self._itf.get_request(unit_addr_list=self._addr_list,
                                             timeout=0)
 
-        # TODO check if request is a Task so that it can hand it off to the
-        # asynchronous, i.e. subclass's process() function?
-        if request is None:
-            return
+        # if get_request is async or none, hands it off to the async subclass
+        if not isinstance(request, Request):
+            return request
 
         if request.function == Const.READ_COILS:
             # Coils (setter+getter) [0, 1]

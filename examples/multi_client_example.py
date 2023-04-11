@@ -51,6 +51,9 @@ async def start_rtu_server(slave_addr,
         # works only with fake machine UART
         assert client._itf._uart._is_server is True
 
+    # start listening in background
+    await client.bind()
+
     print('Setting up RTU registers ...')
     # use the defined values of each register type provided by register_definitions
     client.setup_registers(registers=register_definitions)

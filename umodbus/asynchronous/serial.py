@@ -52,11 +52,21 @@ class AsyncModbusRTU(AsyncModbus):
                            ctrl_pin=ctrl_pin),
             [addr]
         )
-        self.event = asyncio.Event()
+
+    async def bind(self) -> None:
+        """@see AsyncRTUServer.bind"""
+
+        await self._itf.bind()
 
     async def serve_forever(self) -> None:
-        while not self.event.is_set():
-            await self.process()
+        """@see AsyncRTUServer.serve_forever"""
+
+        await self._itf.serve_forever()
+
+    def server_close(self) -> None:
+        """@see AsyncRTUServer.server_close"""
+
+        self._itf.server_close()
 
 
 class AsyncRTUServer(RTUServer):
@@ -83,8 +93,35 @@ class AsyncRTUServer(RTUServer):
                          pins=pins,
                          ctrl_pin=ctrl_pin)
 
+        self._task = None
+        self.event = asyncio.Event()
         self._uart_reader = asyncio.StreamReader(self._uart)
         self._uart_writer = asyncio.StreamWriter(self._uart, {})
+
+    async def bind(self) -> None:
+        """
+        Starts serving the asynchronous server on the specified host and port
+        specified in the constructor.
+        """
+
+        self._task = asyncio.create_task(self._uart_bind())
+
+    async def _uart_bind(self) -> None:
+        while not self.event.is_set():
+            # form request and pass to process in infinite loop
+            await self.process()
+
+    async def serve_forever(self) -> None:
+        """Waits for the server to close."""
+
+        if self._task is None:
+            raise ValueError("Error: must call bind() first")
+        await self._task
+
+    def server_close(self) -> None:
+        """Stops a running server, i.e. stops reading from UART."""
+
+        self.event.set()
 
     async def _uart_read_frame(self,
                                timeout: Optional[int] = None) -> bytearray:

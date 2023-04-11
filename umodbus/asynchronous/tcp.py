@@ -52,15 +52,12 @@ class AsyncModbusTCP(AsyncModbus):
         return self._itf.is_bound
 
     async def serve_forever(self) -> None:
-        """
-        Starts serving the asynchronous server on the specified host and port
-        specified in the constructor.
-        """
+        """@see AsyncTCPServer.serve_forever"""
 
         await self._itf.serve_forever()
 
     def server_close(self) -> None:
-        """Stops the server."""
+        """@see AsyncTCPServer.server_close"""
 
         self._itf.server_close()
 

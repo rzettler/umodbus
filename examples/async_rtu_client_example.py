@@ -46,6 +46,9 @@ async def start_rtu_server(slave_addr,
         # works only with fake machine UART
         assert client._itf._uart._is_server is True
 
+    # start continuously listening in background
+    await client.bind()
+
     # reset all registers back to their default value with a callback
     setup_callbacks(client, register_definitions)
 
