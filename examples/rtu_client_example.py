@@ -39,7 +39,7 @@ if IS_DOCKER_MICROPYTHON:
     # works only with fake machine UART
     assert client._itf._uart._is_server is True
     with open('registers/example.json', 'r') as file:
-        register_definitions = json.load(file)
+        register_definitions = json.load(file)  # noqa: F811
 
 
 # reset all registers back to their default value with a callback
