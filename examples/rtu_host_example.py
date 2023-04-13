@@ -17,8 +17,8 @@ bus address and UART communication speed can be defined by the user.
 
 # import modbus host classes
 from umodbus.serial import Serial as ModbusRTUMaster
+from examples.common.register_definitions import register_definitions
 from examples.common.rtu_host_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_host_common import register_definitions
 from examples.common.rtu_host_common import rtu_pins, baudrate
 from examples.common.rtu_host_common import slave_addr, uart_id, exit
 from examples.common.host_tests import run_sync_host_tests
