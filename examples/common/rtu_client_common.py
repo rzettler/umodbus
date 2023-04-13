@@ -24,6 +24,7 @@ def exit():
         import sys
         sys.exit(0)
 
+
 # ===============================================
 # RTU Slave setup
 # act as client, provide Modbus data via RTU to a host device
