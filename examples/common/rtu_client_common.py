@@ -19,6 +19,11 @@ except AttributeError:
     IS_DOCKER_MICROPYTHON = True
 
 
+def exit():
+    if IS_DOCKER_MICROPYTHON:
+        import sys
+        sys.exit(0)
+
 # ===============================================
 # RTU Slave setup
 # act as client, provide Modbus data via RTU to a host device
