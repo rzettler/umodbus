@@ -95,6 +95,8 @@ class AsyncRTUServer(RTUServer):
 
         self._task = None
         self.event = asyncio.Event()
+        self.req_handler: Callable[[Optional[AsyncRequest]],
+                                   Coroutine[Any, Any, bool]] = None
         self._uart_reader = asyncio.StreamReader(self._uart)
         self._uart_writer = asyncio.StreamWriter(self._uart, {})
 
@@ -107,9 +109,16 @@ class AsyncRTUServer(RTUServer):
         self._task = asyncio.create_task(self._uart_bind())
 
     async def _uart_bind(self) -> None:
+        """Starts processing requests continuously. Must be run as a task."""
+
+        if self.req_handler is None:
+            raise ValueError("No req_handler detected. "
+                             "This may be because this class object was "
+                             "instantiated manually, and not as part of "
+                             "a Modbus server.")
         while not self.event.is_set():
             # form request and pass to process in infinite loop
-            await self.process()
+            await self.req_handler()
 
     async def serve_forever(self) -> None:
         """Waits for the server to close."""
@@ -228,11 +237,21 @@ class AsyncRTUServer(RTUServer):
 
     def set_params(self,
                    addr_list: Optional[List[int]],
-                   req_handler: Callable[[AsyncRequest],
+                   req_handler: Callable[[Optional[AsyncRequest]],
                                          Coroutine[Any, Any, bool]]) -> None:
-        """Dummy function for common _itf interface"""
+        """
+        Used to set parameters such as the unit address list
+        and the processing handler.
 
-        pass
+        :param      addr_list:      The unit address list, currently ignored
+        :type       addr_list:      List[int], optional
+        :param      req_handler:    A callback that is responsible for parsing
+                                    individual requests from a Modbus client
+        :type       req_handler:    (Optional[AsyncRequest]) ->
+                                        (() -> bool, async)
+        """
+
+        self.req_handler = req_handler
 
 
 class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):

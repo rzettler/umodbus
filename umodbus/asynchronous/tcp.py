@@ -139,10 +139,8 @@ class AsyncTCPServer(TCPServer):
     def __init__(self, timeout: float = 5.0):
         super().__init__()
         self._is_bound: bool = False
-        self._handle_request: Optional[Callable[[AsyncRequest],
-                                                Coroutine[Any,
-                                                          Any,
-                                                          bool]]] = None
+        self._handle_request: Callable[[Optional[AsyncRequest]],
+                                       Coroutine[Any, Any, bool]] = None
         self._unit_addr_list: Optional[List[int]] = None
         self._req_dict: Dict[AsyncRequest, Tuple[asyncio.StreamWriter,
                                                  int]] = {}
@@ -305,7 +303,7 @@ class AsyncTCPServer(TCPServer):
 
     def set_params(self,
                    addr_list: Optional[List[int]],
-                   req_handler: Callable[[AsyncRequest],
+                   req_handler: Callable[[Optional[AsyncRequest]],
                                          Coroutine[Any, Any, bool]]) -> None:
         """
         Used to set parameters such as the unit address
@@ -315,7 +313,8 @@ class AsyncTCPServer(TCPServer):
         :type       addr_list:      List[int], optional
         :param      req_handler:    A callback that is responsible for parsing
                                     individual requests from a Modbus client
-        :type       req_handler:    (AsyncRequest) -> (() -> bool, async)
+        :type       req_handler:    (Optional[AsyncRequest]) ->
+                                        (() -> bool, async)
         """
 
         self._handle_request = req_handler
