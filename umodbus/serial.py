@@ -26,6 +26,9 @@ from .typing import List, Optional, Union
 
 
 class ModbusRTU(Modbus):
+    INV_RX = UART.INV_RX  # Include in class so they can be used when creating the object
+    INV_TX = UART.INV_TX
+    
     """
     Modbus RTU client class
 
@@ -45,7 +48,10 @@ class ModbusRTU(Modbus):
     :type       ctrl_pin:    int
     :param      uart_id:     The ID of the used UART
     :type       uart_id:     int
+    :param      invert:      Invert TX and/or RX pins
+    :type       invert:      int
     """
+
     def __init__(self,
                  addr: int,
                  baudrate: int = 9600,
@@ -54,7 +60,8 @@ class ModbusRTU(Modbus):
                  parity: Optional[int] = None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
-                 uart_id: int = 1):
+                 uart_id: int = 1,
+                 invert: int = None):
         super().__init__(
             # set itf to Serial object, addr_list to [addr]
             Serial(uart_id=uart_id,
@@ -63,12 +70,16 @@ class ModbusRTU(Modbus):
                    stop_bits=stop_bits,
                    parity=parity,
                    pins=pins,
-                   ctrl_pin=ctrl_pin),
+                   ctrl_pin=ctrl_pin,
+                   invert=invert),
             [addr]
         )
 
 
 class Serial(CommonModbusFunctions):
+    INV_RX = UART.INV_RX  # Include in class so they can be used when creating the object
+    INV_TX = UART.INV_TX
+    
     def __init__(self,
                  uart_id: int = 1,
                  baudrate: int = 9600,
@@ -76,7 +87,8 @@ class Serial(CommonModbusFunctions):
                  stop_bits: int = 1,
                  parity=None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
-                 ctrl_pin: int = None):
+                 ctrl_pin: int = None,
+                 invert: int = None):
         """
         Setup Serial/RTU Modbus
 
@@ -105,7 +117,8 @@ class Serial(CommonModbusFunctions):
                           # timeout_chars=2,  # WiPy only
                           # pins=pins         # WiPy only
                           tx=pins[0],
-                          rx=pins[1]
+                          rx=pins[1],
+                          invert=invert
                           )
 
         if ctrl_pin is not None:
