@@ -62,7 +62,7 @@ async def start_rtu_host(rtu_pins,
 
 # create and run task
 task = start_rtu_host(
-    pins=rtu_pins,          # given as tuple (TX, RX)
+    rtu_pins=rtu_pins,      # given as tuple (TX, RX)
     baudrate=baudrate,      # optional, default 9600
     # data_bits=8,          # optional, default 8
     # stop_bits=1,          # optional, default 1

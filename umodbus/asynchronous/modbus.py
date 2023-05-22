@@ -33,18 +33,25 @@ class AsyncModbus(Modbus):
     async def process(self, request: Optional[AsyncRequest] = None) -> None:
         """@see Modbus.process"""
 
+        print("2.1 called self.process")
         result = super().process(request)
+        print("2.2 retrieved result from self.process: ", result)
         if result is None:
             return
+        print("2.3 retrieved task from self.process")
         request = await result
+        print("2.4 received request from self.process")
         if request is None:
             return
+        print("2.5 processing request again")
         # below code should only execute if no request was passed, i.e. if
         # process() was called manually - so that get_request() returns an
         # AsyncRequest
         sub_result = super().process(request)
         if sub_result is not None:
+            print("2.6 running asyncrequest from self.process")
             await sub_result
+            print("2.7 finished running request")
 
     async def _process_read_access(self,
                                    request: AsyncRequest,

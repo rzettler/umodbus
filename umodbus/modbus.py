@@ -70,15 +70,16 @@ class Modbus(object):
         reg_type = None
         req_type = None
 
+        print("2.1.1 is request None? ", request is None)
         # for synchronous version
         if request is None:
             request = self._itf.get_request(unit_addr_list=self._addr_list,
                                             timeout=0)
-
         # if get_request is async or none, hands it off to the async subclass
         if not isinstance(request, Request):
             return request
 
+        print("2.1.2 request is a Request, parsing...")
         if request.function == Const.READ_COILS:
             # Coils (setter+getter) [0, 1]
             # function 01 - read single register
@@ -114,13 +115,16 @@ class Modbus(object):
             reg_type = Const.HREGS
             req_type = Const.WRITE
         else:
+            print("2.1.3 invalid, sending exception")
             return request.send_exception(Const.ILLEGAL_FUNCTION)
 
         if reg_type:
             if req_type == Const.READ:
+                print("2.1.3 returning read access")
                 return self._process_read_access(request=request,
                                                  reg_type=reg_type)
             elif req_type == Const.WRITE:
+                print("2.1.4 returning write access")
                 return self._process_write_access(request=request,
                                                   reg_type=reg_type)
 
@@ -199,17 +203,21 @@ class Modbus(object):
         """
         address = request.register_addr
 
+        print("2.1.3.1 read address is", address)
         if address in self._register_dict[reg_type]:
+            print("2.1.3.2.1 address in register_dict :", reg_type)
             if self._register_dict[reg_type][address].get('on_get_cb', 0):
                 vals = self._create_response(request=request, reg_type=reg_type)
                 _cb = self._register_dict[reg_type][address]['on_get_cb']
                 _cb(reg_type=reg_type, address=address, val=vals)
 
             vals = self._create_response(request=request, reg_type=reg_type)
+            print("2.1.3.2.2 created response, returning")
             return request.send_response(vals)
         else:
             # "return" is hack to ensure that AsyncModbus can call await
             # on this result if AsyncRequest is passed to its function
+            print("2.1.3.3 invalid address, sending exception")
             return request.send_exception(Const.ILLEGAL_DATA_ADDRESS)
 
     def _process_write_access(self, request: Request, reg_type: str) \
@@ -229,14 +237,17 @@ class Modbus(object):
         address = request.register_addr
         val = False
 
+        print("2.1.4.1 write address is", address)
         if address in self._register_dict[reg_type]:
             if request.data is None:
+                print("2.1.4.2.1 error, no data in request")
                 return request.send_exception(Const.ILLEGAL_DATA_VALUE)
 
             if reg_type == Const.COILS:
                 if request.function == Const.WRITE_SINGLE_COIL:
                     val = request.data[0]
                     if 0x00 < val < 0xFF:
+                        print("2.1.4.2.2 error, illegal data value in request")
                         return request.send_exception(Const.ILLEGAL_DATA_VALUE)
                     val = [(val == 0xFF)]
                 elif request.function == Const.WRITE_MULTIPLE_COILS:
@@ -255,6 +266,7 @@ class Modbus(object):
                     self.set_hreg(address=address, value=val)
             else:
                 # nothing except holding registers or coils can be set
+                print("2.1.4.2.3 error, illegal function:", reg_type)
                 return request.send_exception(Const.ILLEGAL_FUNCTION)
 
             self._set_changed_register(reg_type=reg_type,
@@ -263,7 +275,9 @@ class Modbus(object):
             if self._register_dict[reg_type][address].get('on_set_cb', 0):
                 _cb = self._register_dict[reg_type][address]['on_set_cb']
                 _cb(reg_type=reg_type, address=address, val=val)
+            print("2.1.4.3 valid, sending response")
             return request.send_response()
+        print("2.1.4.4 error, illegal address", address)
         return request.send_exception(Const.ILLEGAL_DATA_ADDRESS)
 
     def add_coil(self,

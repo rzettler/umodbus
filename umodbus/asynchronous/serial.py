@@ -125,6 +125,7 @@ class AsyncRTUServer(RTUServer):
 
         if self._task is None:
             raise ValueError("Error: must call bind() first")
+        print("`serve_forever`: Awaiting self._task (self.process) on AsyncRTUServer...")
         await self._task
 
     def server_close(self) -> None:
