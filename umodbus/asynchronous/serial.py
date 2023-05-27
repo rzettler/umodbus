@@ -125,7 +125,6 @@ class AsyncRTUServer(RTUServer):
 
         if self._task is None:
             raise ValueError("Error: must call bind() first")
-        print("`serve_forever`: Awaiting self._task (self.process) on AsyncRTUServer...")
         await self._task
 
     def server_close(self) -> None:
@@ -151,14 +150,18 @@ class AsyncRTUServer(RTUServer):
             current_timeout = total_timeout
             while True:
                 read_task = self._uart_reader.read()
+                print("2.3.1.1 waiting for data from UART")
                 data = await asyncio.wait_for(read_task, current_timeout)
+                print("2.3.1.2 received data from UART")
                 received_bytes.extend(data)
 
                 # if data received, switch to waiting until inter-frame
                 # timeout is exceeded, to delineate two separate frames
                 current_timeout = frame_timeout
         except asyncio.TimeoutError:
+            print("2.3.1.3 timeout occurred when waiting for data from UART")
             pass  # stop when no data left to read before timeout
+        print("2.3.1.4 data from UART is:", received_bytes)
         return received_bytes
 
     async def send_response(self,
@@ -216,13 +219,18 @@ class AsyncRTUServer(RTUServer):
             Optional[AsyncRequest]:
         """@see Serial.get_request"""
 
+        print("2.3.1 reading data from UART...")
         req = await self._uart_read_frame(timeout=timeout)
+        print("2.3.2 received data (or timeout) from UART, req is:", req)
         req_no_crc = self._parse_request(req=req,
                                          unit_addr_list=unit_addr_list)
+        print("2.3.3 req_no_crc is:", req_no_crc)
         try:
             if req_no_crc is not None:
+                print("2.3.4 creating AsyncRequest")
                 return AsyncRequest(interface=self, data=req_no_crc)
         except ModbusException as e:
+            print("2.3.5 exception occurred when creating AsyncRequest:", e)
             await self.send_exception_response(slave_addr=req[0],
                                                function_code=e.function_code,
                                                exception_code=e.exception_code)
