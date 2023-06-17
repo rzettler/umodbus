@@ -136,33 +136,73 @@ class AsyncRTUServer(RTUServer):
                                timeout: Optional[int] = None) -> bytearray:
         """@see Serial._uart_read_frame"""
 
-        # set timeout to at least twice the time between two
-        # frames in case the timeout was set to zero or None
-        if not timeout:
+        received_bytes = bytearray()
+
+        # set timeout to at least twice the time between two frames in case the
+        # timeout was set to zero or None
+        if timeout == 0 or timeout is None:
             timeout = 2 * self._t35chars  # in milliseconds
 
-        received_bytes = bytearray()
-        total_timeout = timeout * US_TO_S
-        frame_timeout = self._t35chars * US_TO_S
+        start_us = time.ticks_us()
 
-        try:
-            # wait until overall timeout to read at least one byte
-            current_timeout = total_timeout
-            while True:
-                read_task = self._uart_reader.read()
-                print("2.3.1.1 waiting for data from UART")
-                data = await asyncio.wait_for(read_task, current_timeout)
-                print("2.3.1.2 received data from UART")
-                received_bytes.extend(data)
+        # stay inside this while loop at least for the timeout time
+        while (time.ticks_diff(time.ticks_us(), start_us) <= timeout):
+            # check amount of available characters
+            if self._uart.any():
+                # remember this time in microseconds
+                last_byte_ts = time.ticks_us()
 
-                # if data received, switch to waiting until inter-frame
-                # timeout is exceeded, to delineate two separate frames
-                current_timeout = frame_timeout
-        except asyncio.TimeoutError:
-            print("2.3.1.3 timeout occurred when waiting for data from UART")
-            pass  # stop when no data left to read before timeout
-        print("2.3.1.4 data from UART is:", received_bytes)
+                # do not stop reading and appending the result to the buffer
+                # until the time between two frames elapsed
+                while time.ticks_diff(time.ticks_us(),
+                                      last_byte_ts) <= self._t35chars:
+                    # WiPy only
+                    # r = self._uart.readall()
+                    data = await self._uart_reader.read()
+
+                    # if something has been read after the first iteration of
+                    # this inner while loop (during self._t35chars time)
+                    if data is not None:
+                        # append the new read stuff to the buffer
+                        received_bytes.extend(data)
+
+                        # update the timestamp of the last byte being read
+                        last_byte_ts = time.ticks_us()
+
+            # if something has been read before the overall timeout is reached
+            if len(received_bytes) > 0:
+                return received_bytes
+
+        # return the result in case the overall timeout has been reached
         return received_bytes
+
+        # set timeout to at least twice the time between two
+        # frames in case the timeout was set to zero or None
+        # if not timeout:
+        #    timeout = 2 * self._t35chars  # in milliseconds
+        #
+        # received_bytes = bytearray()
+        # total_timeout = timeout * US_TO_S
+        # frame_timeout = self._t35chars * US_TO_S
+        #
+        # try:
+        #    wait until overall timeout to read at least one byte
+        #    current_timeout = total_timeout
+        #    while True:
+        #        read_task = self._uart_reader.read()
+        #        print("2.3.1.1 waiting for data from UART")
+        #        data = await asyncio.wait_for(read_task, current_timeout)
+        #        print("2.3.1.2 received data from UART")
+        #        received_bytes.extend(data)
+        #
+        #        if data received, switch to waiting until inter-frame
+        #        timeout is exceeded, to delineate two separate frames
+        #        current_timeout = frame_timeout
+        # except asyncio.TimeoutError:
+        #    print("2.3.1.3 timeout occurred when waiting for data from UART")
+        #    pass  # stop when no data left to read before timeout
+        # print("2.3.1.4 data from UART is:", received_bytes)
+        # return received_bytes
 
     async def send_response(self,
                             slave_addr: int,
