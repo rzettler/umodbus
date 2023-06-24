@@ -204,7 +204,7 @@ class RTUServer(CommonRTUFunctions):
 
         if len(req) < 8 or (unit_addr_list is not None and
                             req[0] not in unit_addr_list):
-            print("2.3.2.1 Error: invalid req", len(req), req[0], unit_addr_list)
+            print("2.3.2.1 Error: invalid req", req, unit_addr_list)
             return None
 
         req_crc = req[-Const.CRC_LENGTH:]
