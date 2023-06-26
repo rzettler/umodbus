@@ -259,12 +259,9 @@ class AsyncRTUServer(RTUServer):
             Optional[AsyncRequest]:
         """@see Serial.get_request"""
 
-        print("2.3.1 reading data from UART...")
         req = await self._uart_read_frame(timeout=timeout)
-        print("2.3.2 received data (or timeout) from UART, req is:", req)
         req_no_crc = self._parse_request(req=req,
                                          unit_addr_list=unit_addr_list)
-        print("2.3.3 req_no_crc is:", req_no_crc)
         try:
             if req_no_crc is not None:
                 print("2.3.4 creating AsyncRequest")

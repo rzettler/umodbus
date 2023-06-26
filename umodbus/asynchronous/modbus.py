@@ -36,7 +36,6 @@ class AsyncModbus(Modbus):
         result = super().process(request)
         if result is None:
             return
-        print("2.3 retrieved task from self.process")
         # Result of get_request() if request is None, or either of the *tasks*:
         # - AsyncRequest.send_exception() (invalid function code)
         # - self._process_read_access() and self._process_write_access():
@@ -44,9 +43,9 @@ class AsyncModbus(Modbus):
         #   - AsyncRequest.send_exception()
         # - None: implies no data received
         request = await result
-        print("2.4 received request from self.process:", request)
         if request is None:
             return
+        print("2.4 received valid request from self.process:", request)
         # below code should only execute if no request was passed, i.e. if
         # process() was called manually - so that get_request() returns an
         # AsyncRequest

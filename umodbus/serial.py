@@ -204,18 +204,18 @@ class RTUServer(CommonRTUFunctions):
 
         if len(req) < 8 or (unit_addr_list is not None and
                             req[0] not in unit_addr_list):
-            print("2.3.2.1 Error: invalid req", req, unit_addr_list)
             return None
 
+        print("2.3.2.2 valid request received", req)
         req_crc = req[-Const.CRC_LENGTH:]
         req_no_crc = req[:-Const.CRC_LENGTH]
         expected_crc = self._calculate_crc16(req_no_crc)
 
         if (req_crc[0] != expected_crc[0]) or (req_crc[1] != expected_crc[1]):
-            print("2.3.2.2 Error: req_crc does not match expected_crc", req_crc, expected_crc)
+            print("2.3.2.3 Error: req_crc does not match expected_crc", req_crc, expected_crc)
             return None
 
-        print("2.3.2.3 valid crc:", req_crc, "for request", req_no_crc)
+        print("2.3.2.4 valid crc:", req_crc, "for request", req_no_crc)
         return req_no_crc
 
     def _uart_read_frame(self, timeout: Optional[int] = None) -> bytearray:
