@@ -26,9 +26,10 @@ from .typing import List, Optional, Union
 
 
 class ModbusRTU(Modbus):
-    INV_RX = UART.INV_RX  # Include in class so they can be used when creating the object
+    # Include in class so they can be used when creating the object
+    INV_RX = UART.INV_RX
     INV_TX = UART.INV_TX
-    
+
     """
     Modbus RTU client class
 
@@ -61,7 +62,7 @@ class ModbusRTU(Modbus):
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
                  uart_id: int = 1,
-                 invert: int = None):
+                 invert: int = 0):
         super().__init__(
             # set itf to Serial object, addr_list to [addr]
             Serial(uart_id=uart_id,
@@ -77,9 +78,10 @@ class ModbusRTU(Modbus):
 
 
 class Serial(CommonModbusFunctions):
-    INV_RX = UART.INV_RX  # Include in class so they can be used when creating the object
+    # Include in class so they can be used when creating the object
+    INV_RX = UART.INV_RX
     INV_TX = UART.INV_TX
-    
+
     def __init__(self,
                  uart_id: int = 1,
                  baudrate: int = 9600,
@@ -88,7 +90,7 @@ class Serial(CommonModbusFunctions):
                  parity=None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
-                 invert: int = None):
+                 invert: int = 0):
         """
         Setup Serial/RTU Modbus
 
@@ -106,6 +108,8 @@ class Serial(CommonModbusFunctions):
         :type       pins:        List[Union[int, Pin], Union[int, Pin]]
         :param      ctrl_pin:    The control pin
         :type       ctrl_pin:    int
+        :param      invert:      Invert TX and/or RX pins
+        :type       invert:      int
         """
         # UART flush function is introduced in Micropython v1.20.0
         self._has_uart_flush = callable(getattr(UART, "flush", None))
