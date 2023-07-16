@@ -158,7 +158,7 @@ class AsyncRTUServer(RTUServer):
                                       last_byte_ts) <= self._t35chars:
                     # WiPy only
                     # r = self._uart.readall()
-                    data = await self._uart_reader.read()
+                    data = self._uart.read()
 
                     # if something has been read after the first iteration of
                     # this inner while loop (during self._t35chars time)
