@@ -27,6 +27,11 @@ class UART(object):
 
     See https://docs.micropython.org/en/latest/library/machine.UART.html
     """
+    # ESP32: TX=32, RX=4
+    # RP2: TX=1, RX=2
+    INV_RX = 4
+    INV_TX = 32
+
     def __init__(self,
                  uart_id: int,
                  baudrate: int = 9600,
@@ -35,7 +40,8 @@ class UART(object):
                  stop: int = 1,
                  tx: int = 1,
                  rx: int = 2,
-                 timeout: int = 0) -> None:
+                 timeout: int = 0,
+                 invert: int = 0) -> None:
         self._uart_id = uart_id
         if timeout == 0:
             timeout = 5.0

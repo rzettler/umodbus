@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [Unreleased] -->
 
 ## Released
+## [2.4.0] - 2023-07-20
+### Added
+- The following fixes were provided by @sandyscott
+- UART signals can be inverted with the `invert` argument of the `Serial` and `ModbusRTU` class constructors
+
 ## [2.3.7] - 2023-07-19
 ### Fixed
 - Add a single character wait time after flush to avoid timing issues with RTU control pin, see #68 and #72
@@ -307,8 +312,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PEP8 style issues on all files of [`lib/uModbus`](lib/uModbus)
 
 <!-- Links -->
-[Unreleased]: https://github.com/brainelectronics/micropython-modbus/compare/2.3.7...develop
+[Unreleased]: https://github.com/brainelectronics/micropython-modbus/compare/2.4.0...develop
 
+[2.4.0]: https://github.com/brainelectronics/micropython-modbus/tree/2.4.0
 [2.3.7]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.7
 [2.3.6]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.6
 [2.3.5]: https://github.com/brainelectronics/micropython-modbus/tree/2.3.5
