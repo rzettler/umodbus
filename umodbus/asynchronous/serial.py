@@ -168,6 +168,8 @@ class AsyncRTUServer(RTUServer):
 
                         # update the timestamp of the last byte being read
                         last_byte_ts = time.ticks_us()
+            else:
+                await asyncio.sleep(0)
 
             # if something has been read before the overall timeout is reached
             if len(received_bytes) > 0:
