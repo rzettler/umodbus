@@ -352,6 +352,8 @@ def response(function_code: int,
                            request_register_addr,
                            request_register_qty)
 
+    return b''
+
 
 def exception_response(function_code: int, exception_code: int) -> bytes:
     """
