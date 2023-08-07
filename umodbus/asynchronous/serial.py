@@ -10,7 +10,10 @@
 
 # system packages
 from machine import Pin
-import asyncio
+try:
+    import uasyncio as asyncio
+except ImportError:
+    import asyncio
 import time
 
 # custom packages

@@ -22,7 +22,7 @@ from .common import Request
 
 # typing not natively supported on MicroPython
 from .typing import Callable, List, Optional, Union
-from typing import KeysView, Literal, Dict, Awaitable, overload
+from .typing import KeysView, Literal, Dict, Awaitable, overload
 
 CallbackType = Callable[[str, int, List[int]], None]
 

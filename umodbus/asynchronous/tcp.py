@@ -10,7 +10,10 @@
 
 # system packages
 import struct
-import asyncio
+try:
+    import uasyncio as asyncio
+except ImportError:
+    import asyncio
 
 # custom packages
 from .modbus import AsyncModbus
