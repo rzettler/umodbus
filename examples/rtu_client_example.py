@@ -63,6 +63,7 @@ while True:
         break
     except Exception as e:
         print('Exception during execution: {}'.format(e))
+        raise
 
 print("Finished providing/accepting data as client")
 
