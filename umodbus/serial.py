@@ -293,15 +293,13 @@ class RTUServer(CommonRTUFunctions):
         req_no_crc = self._parse_request(req, unit_addr_list)
         try:
             if req_no_crc is not None:
-                request = Request(interface=self, data=req_no_crc)
+                return Request(interface=self, data=req_no_crc)
         except ModbusException as e:
             self.send_exception_response(
                 slave_addr=req[0],
                 function_code=e.function_code,
                 exception_code=e.exception_code)
             return None
-
-        return request
 
     def send_response(self,
                       slave_addr: int,
