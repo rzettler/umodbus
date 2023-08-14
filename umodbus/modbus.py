@@ -117,9 +117,9 @@ class Modbus(object):
 
         if reg_type:
             if req_type == Const.READ:
-                self._process_read_access(request=request, reg_type=reg_type)
+                return self._process_read_access(request=request, reg_type=reg_type)
             elif req_type == Const.WRITE:
-                self._process_write_access(request=request, reg_type=reg_type)
+                return self._process_write_access(request=request, reg_type=reg_type)
 
     def _create_response(self,
                          request: Request,
