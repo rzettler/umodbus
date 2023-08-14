@@ -142,6 +142,26 @@ class CommonRTUFunctions(object):
 
         return struct.pack('<H', crc)
 
+    def _form_serial_adu(self, modbus_pdu: bytes, slave_addr: int) -> bytearray:
+        """
+        Adds the slave address to the beginning of the Modbus PDU and appends
+        the checksum of the resulting payload to form the Modbus Serial ADU.
+
+        :param      modbus_pdu:  The modbus Protocol Data Unit
+        :type       modbus_pdu:  bytes
+        :param      slave_addr:  The slave address
+        :type       slave_addr:  int
+
+        :returns:   The modbus serial PDU.
+        :rtype      bytearray
+        """
+
+        modbus_adu = bytearray()
+        modbus_adu.append(slave_addr)
+        modbus_adu.extend(modbus_pdu)
+        modbus_adu.extend(self._calculate_crc16(modbus_adu))
+        return modbus_adu
+
     def _send(self, modbus_pdu: bytes, slave_addr: int) -> None:
         """
         Send Modbus frame via UART
@@ -155,10 +175,7 @@ class CommonRTUFunctions(object):
         """
         # modbus_adu: Modbus Application Data Unit
         # consists of the Modbus PDU, with slave address prepended and checksum appended
-        modbus_adu = bytearray()
-        modbus_adu.append(slave_addr)
-        modbus_adu.extend(modbus_pdu)
-        modbus_adu.extend(self._calculate_crc16(modbus_adu))
+        modbus_adu = self._form_serial_adu(modbus_pdu, slave_addr)
 
         if self._ctrlPin:
             self._ctrlPin.on()

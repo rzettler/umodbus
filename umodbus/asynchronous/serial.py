@@ -466,22 +466,42 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
     @see CommonRTUFunctions._send
     """
 
-    serial_pdu = device._form_serial_pdu(modbus_pdu, slave_addr)
-    send_start_time = 0
+    modbus_adu = device._form_serial_adu(modbus_pdu, slave_addr)
+
+    # N.B.: the time scales involved means that asyncio's switching
+    # might be too slow; if this does not work, just replace with
+    # the equivalent `time.sleep_us()`` functions instead.
 
     if device._ctrlPin:
-        device._ctrlPin(1)
-        # wait 1 ms to ensure control pin has changed
-        await asyncio.sleep(1 / 1000)
-        send_start_time = time.ticks_us()
+        device._ctrlPin.on()
+        # wait until the control pin really changed
+        # 85-95us (ESP32 @ 160/240MHz)
+        await asyncio.sleep_ms(0.200)
 
-    device._uart_writer.write(serial_pdu)
+    # the timing of this part is critical:
+    # - if we disable output too early,
+    #   the command will not be received in full
+    # - if we disable output too late,
+    #   the incoming response will lose some data at the beginning
+    # easiest to just wait for the bytes to be sent out on the wire
+
+    send_start_time = time.ticks_us()
+    # 360-400us @ 9600-115200 baud (measured) (ESP32 @ 160/240MHz)
+    device._uart_writer.write(modbus_adu)
     await device._uart_writer.drain()
+    send_finish_time = time.ticks_us()
+
+    if device._has_uart_flush:
+        device._uart.flush()
+        # sleep _t1char microseconds (1 ms -> 1000 us)
+        await asyncio.sleep_ms(device._t1char / 1000)
+    else:
+        sleep_time_us = (
+            device._t1char * len(modbus_adu) -    # total frame time in us
+            time.ticks_diff(send_finish_time, send_start_time) +
+            100     # only required at baudrates above 57600, but hey 100us
+        )
+        await asyncio.sleep_ms(sleep_time_us / 1000)
 
     if device._ctrlPin:
-        total_frame_time_us = device._t1char * len(serial_pdu)
-        target_time = send_start_time + total_frame_time_us
-        time_difference = target_time - time.ticks_us()
-        # idle until data sent
-        await asyncio.sleep(time_difference * US_TO_S)
-        device._ctrlPin(0)
+        device._ctrlPin.off()
