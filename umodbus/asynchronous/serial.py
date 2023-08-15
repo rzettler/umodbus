@@ -17,6 +17,7 @@ except ImportError:
 import time
 
 # custom packages
+import utils
 from .common import CommonAsyncModbusFunctions, AsyncRequest
 from ..common import ModbusException
 from .modbus import AsyncModbus
@@ -489,27 +490,15 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     if device._has_uart_flush:
         device._uart.flush()
-        sleep_time = device._t1char / 1000
-        if sleep_time > 0:
-            # sleep _t1char microseconds (1 ms -> 1000 us)
-            await asyncio.sleep_ms(int(sleep_time))
-        else:
-            # sleep using inbuilt time library since asyncio
-            # too slow for switching times of this magnitude
-            time.sleep_us(sleep_time * 1000)
+        await utils.hybrid_sleep(device._t1char)
+
     else:
-        sleep_time_us = (
+        total_sleep_us = (
             device._t1char * len(modbus_adu) -    # total frame time in us
             time.ticks_diff(send_finish_time, send_start_time) +
             100     # only required at baudrates above 57600, but hey 100us
         )
-        sleep_time_ms = int(sleep_time_us / 1000)
-        if sleep_time_ms > 0:
-            await asyncio.sleep_ms(sleep_time_ms)
-        else:
-            # sleep using inbuilt time library since asyncio
-            # too slow for switching times of this magnitude
-            time.sleep_us(sleep_time_us)
+        await utils.hybrid_sleep(total_sleep_us)
 
     if device._ctrlPin:
         device._ctrlPin.off()
