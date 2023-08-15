@@ -468,15 +468,11 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     modbus_adu = device._form_serial_adu(modbus_pdu, slave_addr)
 
-    # N.B.: the time scales involved means that asyncio's switching
-    # might be too slow; if this does not work, just replace with
-    # the equivalent `time.sleep_us()`` functions instead.
-
     if device._ctrlPin:
         device._ctrlPin.on()
         # wait until the control pin really changed
         # 85-95us (ESP32 @ 160/240MHz)
-        await asyncio.sleep_ms(0.200)
+        time.sleep_us(200)
 
     # the timing of this part is critical:
     # - if we disable output too early,
@@ -493,15 +489,27 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     if device._has_uart_flush:
         device._uart.flush()
-        # sleep _t1char microseconds (1 ms -> 1000 us)
-        await asyncio.sleep_ms(device._t1char / 1000)
+        sleep_time = device._t1char / 1000
+        if sleep_time > 0:
+            # sleep _t1char microseconds (1 ms -> 1000 us)
+            await asyncio.sleep_ms(int(sleep_time))
+        else:
+            # sleep using inbuilt time library since asyncio
+            # too slow for switching times of this magnitude
+            time.sleep_us(sleep_time * 1000)
     else:
         sleep_time_us = (
             device._t1char * len(modbus_adu) -    # total frame time in us
             time.ticks_diff(send_finish_time, send_start_time) +
             100     # only required at baudrates above 57600, but hey 100us
         )
-        await asyncio.sleep_ms(sleep_time_us / 1000)
+        sleep_time_ms = int(sleep_time_us / 1000)
+        if sleep_time_ms > 0:
+            await asyncio.sleep_ms(sleep_time_ms)
+        else:
+            # sleep using inbuilt time library since asyncio
+            # too slow for switching times of this magnitude
+            time.sleep_us(sleep_time_us)
 
     if device._ctrlPin:
         device._ctrlPin.off()
