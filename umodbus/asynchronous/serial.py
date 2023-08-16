@@ -17,7 +17,7 @@ except ImportError:
 import time
 
 # custom packages
-import utils
+from .async_utils import hybrid_sleep
 from .common import CommonAsyncModbusFunctions, AsyncRequest
 from ..common import ModbusException
 from .modbus import AsyncModbus
@@ -490,7 +490,7 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     if device._has_uart_flush:
         device._uart.flush()
-        await utils.hybrid_sleep(device._t1char)
+        await hybrid_sleep(device._t1char)
 
     else:
         total_sleep_us = (
@@ -498,7 +498,7 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
             time.ticks_diff(send_finish_time, send_start_time) +
             100     # only required at baudrates above 57600, but hey 100us
         )
-        await utils.hybrid_sleep(total_sleep_us)
+        await hybrid_sleep(total_sleep_us)
 
     if device._ctrlPin:
         device._ctrlPin.off()
