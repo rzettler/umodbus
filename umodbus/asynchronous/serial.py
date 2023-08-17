@@ -291,7 +291,8 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                  stop_bits: int = 1,
                  parity=None,
                  pins: Tuple[Union[int, Pin], Union[int, Pin]] = None,
-                 ctrl_pin: int = None):
+                 ctrl_pin: int = None,
+                 read_timeout: int = None):
         """
         Setup asynchronous Serial/RTU Modbus
 
@@ -303,7 +304,8 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                          stop_bits=stop_bits,
                          parity=parity,
                          pins=pins,
-                         ctrl_pin=ctrl_pin)
+                         ctrl_pin=ctrl_pin,
+                         read_timeout=read_timeout)
 
         self._uart_reader = asyncio.StreamReader(self._uart)
         self._uart_writer = asyncio.StreamWriter(self._uart, {})
@@ -314,14 +316,15 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
         response = bytearray()
         wait_period = self._t35chars * US_TO_S
 
-        for _ in range(1, 40):
-            # WiPy only
-            # response.extend(await self._uart_reader.readall())
-            response.extend(await self._uart_reader.read())
+        for _ in range(1, self._uart_read_timeout):
+            if self._uart.any():
+                # WiPy only
+                # response.extend(await self._uart_reader.readall())
+                response.extend(await self._uart_reader.read())
 
-            # variable length function codes may require multiple reads
-            if self._exit_read(response):
-                break
+                # variable length function codes may require multiple reads
+                if self._exit_read(response):
+                    break
 
             # wait for the maximum time between two frames
             await asyncio.sleep(wait_period)

@@ -78,24 +78,27 @@ class CommonRTUFunctions(object):
                  stop_bits: int = 1,
                  parity=None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
-                 ctrl_pin: int = None):
+                 ctrl_pin: int = None,
+                 read_timeout: int = None):
         """
         Setup Serial/RTU Modbus (common to client and server)
 
-        :param      uart_id:     The ID of the used UART
-        :type       uart_id:     int
-        :param      baudrate:    The baudrate, default 9600
-        :type       baudrate:    int
-        :param      data_bits:   The data bits, default 8
-        :type       data_bits:   int
-        :param      stop_bits:   The stop bits, default 1
-        :type       stop_bits:   int
-        :param      parity:      The parity, default None
-        :type       parity:      Optional[int]
-        :param      pins:        The pins as list [TX, RX]
-        :type       pins:        List[Union[int, Pin], Union[int, Pin]]
-        :param      ctrl_pin:    The control pin
-        :type       ctrl_pin:    int
+        :param      uart_id:        The ID of the used UART
+        :type       uart_id:        int
+        :param      baudrate:       The baudrate, default 9600
+        :type       baudrate:       int
+        :param      data_bits:      The data bits, default 8
+        :type       data_bits:      int
+        :param      stop_bits:      The stop bits, default 1
+        :type       stop_bits:      int
+        :param      parity:         The parity, default None
+        :type       parity:         Optional[int]
+        :param      pins:           The pins as list [TX, RX]
+        :type       pins:           List[Union[int, Pin], Union[int, Pin]]
+        :param      ctrl_pin:       The control pin
+        :type       ctrl_pin:       int
+        :param      read_timeout:   The read timeout in number of inter-frame delays.
+        :type       read_timeout:   int
         """
         # UART flush function is introduced in Micropython v1.20.0
         self._has_uart_flush = callable(getattr(UART, "flush", None))
@@ -124,6 +127,9 @@ class CommonRTUFunctions(object):
             self._inter_frame_delay = (self._t1char * 3500) // 1000
         else:
             self._inter_frame_delay = 1750
+
+        # no specific reason for 120, taken from _uart_read
+        self._uart_read_timeout = read_timeout or 120
 
     def _calculate_crc16(self, data: bytearray) -> bytes:
         """
@@ -420,7 +426,7 @@ class Serial(CommonRTUFunctions, CommonModbusFunctions):
 
         # TODO: use some kind of hint or user-configurable delay
         #       to determine this loop counter
-        for _ in range(1, 120):
+        for _ in range(1, self._uart_read_timeout):
             if self._uart.any():
                 # WiPy only
                 # response.extend(self._uart.readall())
