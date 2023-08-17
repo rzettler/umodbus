@@ -20,17 +20,18 @@ from umodbus.serial import Serial as ModbusRTUMaster
 from examples.common.register_definitions import register_definitions
 from examples.common.rtu_host_common import IS_DOCKER_MICROPYTHON
 from examples.common.rtu_host_common import rtu_pins, baudrate
-from examples.common.rtu_host_common import slave_addr, uart_id, exit
+from examples.common.rtu_host_common import slave_addr, uart_id, read_timeout, exit
 from examples.common.host_tests import run_sync_host_tests
 
 host = ModbusRTUMaster(
-    pins=rtu_pins,          # given as tuple (TX, RX)
-    baudrate=baudrate,      # optional, default 9600
-    # data_bits=8,          # optional, default 8
-    # stop_bits=1,          # optional, default 1
-    # parity=None,          # optional, default None
-    # ctrl_pin=12,          # optional, control DE/RE
-    uart_id=uart_id         # optional, default 1, see port specific docs
+    pins=rtu_pins,                  # given as tuple (TX, RX)
+    baudrate=baudrate,              # optional, default 9600
+    # data_bits=8,                  # optional, default 8
+    # stop_bits=1,                  # optional, default 1
+    # parity=None,                  # optional, default None
+    # ctrl_pin=12,                  # optional, control DE/RE
+    uart_id=uart_id,                # optional, default 1, see port specific docs
+    read_timeout=read_timeout       # optional, default 120
 )
 
 if IS_DOCKER_MICROPYTHON:

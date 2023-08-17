@@ -24,7 +24,7 @@ except ImportError:
 from umodbus.asynchronous.serial import AsyncSerial as ModbusRTUMaster
 from examples.common.register_definitions import register_definitions
 from examples.common.rtu_host_common import IS_DOCKER_MICROPYTHON
-from examples.common.rtu_host_common import slave_addr, uart_id
+from examples.common.rtu_host_common import slave_addr, uart_id, read_timeout
 from examples.common.rtu_host_common import baudrate, rtu_pins, exit
 from examples.common.host_tests import run_async_host_tests
 
@@ -64,14 +64,14 @@ async def start_rtu_host(rtu_pins,
 
 # create and run task
 task = start_rtu_host(
-    rtu_pins=rtu_pins,      # given as tuple (TX, RX)
-    baudrate=baudrate,      # optional, default 9600
-    # data_bits=8,          # optional, default 8
-    # stop_bits=1,          # optional, default 1
-    # parity=None,          # optional, default None
-    # ctrl_pin=12,          # optional, control DE/RE
-    uart_id=uart_id,        # optional, default 1, see port specific docs
-    read_timeout=120)       # optional, default 120
+    rtu_pins=rtu_pins,              # given as tuple (TX, RX)
+    baudrate=baudrate,              # optional, default 9600
+    # data_bits=8,                  # optional, default 8
+    # stop_bits=1,                  # optional, default 1
+    # parity=None,                  # optional, default None
+    # ctrl_pin=12,                  # optional, control DE/RE
+    uart_id=uart_id,                # optional, default 1, see port specific docs
+    read_timeout=read_timeout)      # optional, default 120
 asyncio.run(task)
 
 exit()

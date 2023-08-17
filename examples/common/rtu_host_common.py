@@ -43,6 +43,7 @@ slave_addr = 10             # address on bus of the client/slave
 rtu_pins = (25, 26)         # (TX, RX)
 baudrate = 9600
 uart_id = 1
+read_timeout = 120
 
 try:
     from machine import Pin
