@@ -97,7 +97,7 @@ class CommonRTUFunctions(object):
         :type       pins:           List[Union[int, Pin], Union[int, Pin]]
         :param      ctrl_pin:       The control pin
         :type       ctrl_pin:       int
-        :param      read_timeout:   The read timeout in number of inter-frame delays.
+        :param      read_timeout:   The read timeout in ms.
         :type       read_timeout:   int
         """
         # UART flush function is introduced in Micropython v1.20.0
@@ -129,7 +129,8 @@ class CommonRTUFunctions(object):
             self._inter_frame_delay = 1750
 
         # no specific reason for 120, taken from _uart_read
-        self._uart_read_timeout = read_timeout or 120
+        # convert to us by multiplying by 1000
+        self._uart_read_timeout = (read_timeout or 0.120) * 1000
 
     def _calculate_crc16(self, data: bytearray) -> bytes:
         """
@@ -423,10 +424,10 @@ class Serial(CommonRTUFunctions, CommonModbusFunctions):
         :rtype:     bytearray
         """
         response = bytearray()
+        # number of repetitions = <wait_time_in_ms> // <sleep_per_repetition>
+        repetitions = self._uart_read_timeout // self._inter_frame_delay
 
-        # TODO: use some kind of hint or user-configurable delay
-        #       to determine this loop counter
-        for _ in range(1, self._uart_read_timeout):
+        for _ in range(1, repetitions):
             if self._uart.any():
                 # WiPy only
                 # response.extend(self._uart.readall())

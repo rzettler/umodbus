@@ -153,6 +153,8 @@ class AsyncRTUServer(RTUServer):
 
         start_us = time.ticks_us()
 
+        # TODO: replace this with async version when async read works
+        #       (see other _uart_read_frame in this file as reference)
         # stay inside this while loop at least for the timeout time
         while (time.ticks_diff(time.ticks_us(), start_us) <= timeout):
             # check amount of available characters
@@ -314,9 +316,10 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
         """@see Serial._uart_read"""
 
         response = bytearray()
-        wait_period = self._t35chars * US_TO_S
+        # number of repetitions = <wait_time_in_ms> // <sleep_per_repetition>
+        repetitions = self._uart_read_timeout // self._inter_frame_delay
 
-        for _ in range(1, self._uart_read_timeout):
+        for _ in range(1, repetitions):
             if self._uart.any():
                 # WiPy only
                 # response.extend(await self._uart_reader.readall())
@@ -327,7 +330,7 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                     break
 
             # wait for the maximum time between two frames
-            await asyncio.sleep(wait_period)
+            await asyncio.sleep(self._inter_frame_delay)
 
         return response
 
@@ -335,14 +338,15 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                                timeout: Optional[int] = None) -> bytearray:
         """@see Serial._uart_read_frame"""
 
+        received_bytes = bytearray()
+
         # set timeout to at least twice the time between two
         # frames in case the timeout was set to zero or None
-        if not timeout:
-            timeout = 2 * self._t35chars  # in milliseconds
+        if timeout == 0 or timeout is None:
+            timeout = 2 * self._inter_frame_delay  # in microseconds
 
-        received_bytes = bytearray()
         total_timeout = timeout * US_TO_S
-        frame_timeout = self._t35chars * US_TO_S
+        frame_timeout = self._inter_frame_delay * US_TO_S
 
         try:
             # wait until overall timeout to read at least one byte
