@@ -99,24 +99,24 @@ async def start_tcp_server(host, port, backlog) -> Tuple[ModbusTCP, asyncio.Task
     return client, task
 
 
-def create_servers(parameters: Dict[str, Any]) -> Tuple[Tuple[ModbusTCP, ModbusRTU],
-                                                        Tuple[asyncio.Task, asyncio.Task]]:
+async def create_servers(parameters: Dict[str, Any]) -> Tuple[Tuple[ModbusTCP, ModbusRTU],
+                                                              Tuple[asyncio.Task, asyncio.Task]]:
     """Creates TCP and RTU servers based on the supplied parameters."""
 
     # create TCP server task
-    tcp_server, tcp_task = start_tcp_server(parameters['local_ip'],
-                                            parameters['tcp_port'],
-                                            parameters['backlog'])
+    tcp_server, tcp_task = await start_tcp_server(parameters['local_ip'],
+                                                  parameters['tcp_port'],
+                                                  parameters['backlog'])
 
     # create RTU server task
-    rtu_server, rtu_task = start_rtu_server(addr=parameters['slave_addr'],
-                                            pins=parameters['rtu_pins'],            # given as tuple (TX, RX)
-                                            baudrate=parameters['baudrate'],        # optional, default 9600
-                                            # data_bits=8,                          # optional, default 8
-                                            # stop_bits=1,                          # optional, default 1
-                                            # parity=None,                          # optional, default None
-                                            # ctrl_pin=12,                          # optional, control DE/RE
-                                            uart_id=parameters['uart_id'])          # optional, default 1, see port specific docs
+    rtu_server, rtu_task = await start_rtu_server(addr=parameters['slave_addr'],
+                                                  pins=parameters['rtu_pins'],            # given as tuple (TX, RX)
+                                                  baudrate=parameters['baudrate'],        # optional, default 9600
+                                                  # data_bits=8,                          # optional, default 8
+                                                  # stop_bits=1,                          # optional, default 1
+                                                  # parity=None,                          # optional, default None
+                                                  # ctrl_pin=12,                          # optional, control DE/RE
+                                                  uart_id=parameters['uart_id'])          # optional, default 1, see port specific docs
 
     # combine both tasks
     return (tcp_server, rtu_server), (tcp_task, rtu_task)
@@ -134,7 +134,7 @@ async def start_servers(initial_params, final_params):
     tcp_task: asyncio.Task
     rtu_task: asyncio.Task
 
-    (tcp_server, rtu_server), (tcp_task, rtu_task) = create_servers(initial_params)
+    (tcp_server, rtu_server), (tcp_task, rtu_task) = await create_servers(initial_params)
 
     # wait for 5 minutes before stopping the RTU server
     await asyncio.sleep(300)
@@ -172,7 +172,7 @@ async def start_servers(initial_params, final_params):
         pass
 
     print("Creating new server")
-    (tcp_server, rtu_server), (tcp_task, rtu_task) = create_servers(final_params)
+    (tcp_server, rtu_server), (tcp_task, rtu_task) = await create_servers(final_params)
 
     await asyncio.gather(tcp_task, rtu_task)
 
