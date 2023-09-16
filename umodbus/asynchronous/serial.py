@@ -240,7 +240,7 @@ class AsyncRTUServer(RTUServer):
                           unit_addr_list: Optional[List[int]] = None,
                           timeout: Optional[int] = None) -> \
             Optional[AsyncRequest]:
-        """@see Serial.get_request"""
+        """@see RTUServer.get_request"""
 
         req = await self._uart_read_frame(timeout=timeout)
         req_no_crc = self._parse_request(req=req,

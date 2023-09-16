@@ -9,7 +9,6 @@
 #
 
 # system packages
-import struct
 try:
     import uasyncio as asyncio
 except ImportError:
@@ -21,6 +20,7 @@ from .common import AsyncRequest, CommonAsyncModbusFunctions
 from .. import functions, const as Const
 from ..common import ModbusException
 from ..tcp import CommonTCPFunctions, TCPServer
+from ..safe_struct import pack, unpack
 
 # typing not natively supported on MicroPython
 from ..typing import Optional, Tuple, List
@@ -178,12 +178,12 @@ class AsyncTCPServer(TCPServer):
 
         size = len(modbus_pdu)
         fmt = 'B' * size
-        adu = struct.pack('>HHHB' + fmt,
-                          req_tid,
-                          0,
-                          size + 1,
-                          slave_addr,
-                          *modbus_pdu)
+        adu = pack('>HHHB' + fmt,
+                   req_tid,
+                   0,
+                   size + 1,
+                   slave_addr,
+                   *modbus_pdu)
         writer.write(adu)
         await writer.drain()
 
@@ -258,8 +258,8 @@ class AsyncTCPServer(TCPServer):
                     break
 
                 req_header_no_uid = req[:header_len]
-                req_tid, req_pid, req_len = struct.unpack('>HHH',
-                                                          req_header_no_uid)
+                req_tid, req_pid, req_len = unpack('>HHH',
+                                                   req_header_no_uid)
                 req_uid_and_pdu = req[header_len:header_len + req_len]
                 if (req_pid != 0):
                     raise ValueError(
@@ -285,7 +285,7 @@ class AsyncTCPServer(TCPServer):
                                 err.exception_code
                             )
         except Exception as err:
-            if not isinstance(err, OSError) or err.errno != 104:
+            if not isinstance(err, OSError):  # or err.errno != 104:
                 print("{0}: ".format(type(err).__name__), err)
         finally:
             await self._close_writer(writer)

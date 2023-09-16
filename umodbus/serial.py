@@ -11,10 +11,10 @@
 # system packages
 from machine import UART
 from machine import Pin
-import struct
 import time
 
 # custom packages
+from .safe_struct import pack
 from . import const as Const
 from . import functions
 from .common import Request, CommonModbusFunctions
@@ -147,7 +147,7 @@ class CommonRTUFunctions(object):
         for char in data:
             crc = (crc >> 8) ^ Const.CRC16_TABLE[((crc) ^ char) & 0xFF]
 
-        return struct.pack('<H', crc)
+        return pack('<H', crc)
 
     def _form_serial_adu(self, modbus_pdu: bytes, slave_addr: int) -> bytearray:
         """

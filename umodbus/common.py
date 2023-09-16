@@ -8,10 +8,8 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 
-# system packages
-import struct
-
 # custom packages
+from .safe_struct import unpack_from
 from . import const as Const
 from . import functions
 
@@ -24,17 +22,17 @@ class Request(object):
     def __init__(self, interface, data: bytearray) -> None:
         self._itf = interface
         self.unit_addr = data[0]
-        self.function, self.register_addr = struct.unpack_from('>BH', data, 1)
+        self.function, self.register_addr = unpack_from('>BH', data, 1)
 
         if self.function in [Const.READ_COILS, Const.READ_DISCRETE_INPUTS]:
-            self.quantity = struct.unpack_from('>H', data, 4)[0]
+            self.quantity = unpack_from('>H', data, 4)[0]
 
             if self.quantity < 0x0001 or self.quantity > 0x07D0:
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
 
             self.data = None
         elif self.function in [Const.READ_HOLDING_REGISTERS, Const.READ_INPUT_REGISTER]:
-            self.quantity = struct.unpack_from('>H', data, 4)[0]
+            self.quantity = unpack_from('>H', data, 4)[0]
 
             if self.quantity < 0x0001 or self.quantity > 0x007D:
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
@@ -52,14 +50,14 @@ class Request(object):
             self.data = data[4:6]
             # all values allowed
         elif self.function == Const.WRITE_MULTIPLE_COILS:
-            self.quantity = struct.unpack_from('>H', data, 4)[0]
+            self.quantity = unpack_from('>H', data, 4)[0]
             if self.quantity < 0x0001 or self.quantity > 0x07D0:
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
             self.data = data[7:]
             if len(self.data) != ((self.quantity - 1) // 8) + 1:
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
         elif self.function == Const.WRITE_MULTIPLE_REGISTERS:
-            self.quantity = struct.unpack_from('>H', data, 4)[0]
+            self.quantity = unpack_from('>H', data, 4)[0]
             if self.quantity < 0x0001 or self.quantity > 0x007B:
                 raise ModbusException(self.function, Const.ILLEGAL_DATA_VALUE)
             self.data = data[7:]
