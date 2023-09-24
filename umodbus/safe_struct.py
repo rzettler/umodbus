@@ -28,9 +28,9 @@ def unpack(format, buffer):
         raise
 
 
-def pack(format, buffer):
+def pack(format, *buffer):
     try:
-        return struct.pack(format, buffer)
+        return struct.pack(format, *buffer)
     except ValueError as err:
         print("Error packing struct:", err)
         print_error(format, buffer)
