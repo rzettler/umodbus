@@ -36,7 +36,8 @@ async def start_rtu_host(rtu_pins,
                          parity=None,
                          ctrl_pin=12,
                          uart_id=1,
-                         read_timeout=120):
+                         read_timeout=120,
+                         **extra_args):
     """Creates an RTU host (client) and runs tests"""
 
     host = ModbusRTUMaster(
@@ -47,7 +48,8 @@ async def start_rtu_host(rtu_pins,
         parity=parity,                  # optional, default None
         ctrl_pin=ctrl_pin,              # optional, control DE/RE
         uart_id=uart_id,                # optional, default 1, see port specific docs
-        read_timeout=read_timeout       # optional, default 120
+        read_timeout=read_timeout,      # optional, default 120
+        **extra_args                    # untested args: timeout_char (default 2)
     )
 
     print('Requesting and updating data on RTU client at address {} with {} baud'.
@@ -71,7 +73,9 @@ task = start_rtu_host(
     # parity=None,                  # optional, default None
     # ctrl_pin=12,                  # optional, control DE/RE
     uart_id=uart_id,                # optional, default 1, see port specific docs
-    read_timeout=read_timeout)      # optional, default 120
+    read_timeout=read_timeout,      # optional, default 120
+    # timeout_char=2                # untested, default 2 (ms)
+)
 asyncio.run(task)
 
 exit()

@@ -54,7 +54,8 @@ class ModbusRTU(Modbus):
                  parity: Optional[int] = None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
-                 uart_id: int = 1):
+                 uart_id: int = 1,
+                 **extra_args):
         super().__init__(
             # set itf to RTUServer object, addr_list to [addr]
             RTUServer(uart_id=uart_id,
@@ -63,7 +64,8 @@ class ModbusRTU(Modbus):
                       stop_bits=stop_bits,
                       parity=parity,
                       pins=pins,
-                      ctrl_pin=ctrl_pin),
+                      ctrl_pin=ctrl_pin,
+                      **extra_args),
             [addr]
         )
 
@@ -79,7 +81,8 @@ class CommonRTUFunctions(object):
                  parity=None,
                  pins: List[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
-                 read_timeout: int = None):
+                 read_timeout: int = None,
+                 **extra_args):
         """
         Setup Serial/RTU Modbus (common to client and server)
 
@@ -107,10 +110,10 @@ class CommonRTUFunctions(object):
                           bits=data_bits,
                           parity=parity,
                           stop=stop_bits,
-                          # timeout_chars=2,  # WiPy only
                           # pins=pins         # WiPy only
                           tx=pins[0],
-                          rx=pins[1])
+                          rx=pins[1],
+                          **extra_args)
 
         if ctrl_pin is not None:
             self._ctrlPin = Pin(ctrl_pin, mode=Pin.OUT)

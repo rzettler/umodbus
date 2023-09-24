@@ -294,7 +294,8 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                  parity=None,
                  pins: Tuple[Union[int, Pin], Union[int, Pin]] = None,
                  ctrl_pin: int = None,
-                 read_timeout: int = None):
+                 read_timeout: int = None,
+                 **extra_args):
         """
         Setup asynchronous Serial/RTU Modbus
 
@@ -307,7 +308,8 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                          parity=parity,
                          pins=pins,
                          ctrl_pin=ctrl_pin,
-                         read_timeout=read_timeout)
+                         read_timeout=read_timeout,
+                         **extra_args)
 
         self._uart_reader = asyncio.StreamReader(self._uart)
         self._uart_writer = asyncio.StreamWriter(self._uart, {})
