@@ -493,7 +493,7 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     send_start_time = time.ticks_us()
     # 360-400us @ 9600-115200 baud (measured) (ESP32 @ 160/240MHz)
-    device._uart_writer.write(modbus_adu)
+    await device._uart_writer.write(modbus_adu)
     await device._uart_writer.drain()
     send_finish_time = time.ticks_us()
 
