@@ -493,14 +493,12 @@ async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
 
     send_start_time = time.ticks_us()
     # 360-400us @ 9600-115200 baud (measured) (ESP32 @ 160/240MHz)
-    await device._uart_writer.write(modbus_adu)
-    await device._uart_writer.drain()
+    device._uart.write(modbus_adu)
     send_finish_time = time.ticks_us()
 
     if device._has_uart_flush:
         device._uart.flush()
         await hybrid_sleep(device._t1char)
-
     else:
         total_sleep_us = (
             device._t1char * len(modbus_adu) -    # total frame time in us
