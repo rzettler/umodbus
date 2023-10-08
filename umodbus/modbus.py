@@ -228,42 +228,46 @@ class Modbus(object):
         address = request.register_addr
         val = False
 
-        if address in self._register_dict[reg_type]:
-            if request.data is None:
+        if address not in self._register_dict[reg_type]:
+            return request.send_exception(Const.ILLEGAL_DATA_ADDRESS)
+        elif request.data is None:
+            return request.send_exception(Const.ILLEGAL_DATA_VALUE)
+        elif reg_type == Const.COILS:
+            if request.function == Const.WRITE_SINGLE_COIL:
+                val = request.data[0]
+                if 0x00 < val < 0xFF:
+                    return request.send_exception(Const.ILLEGAL_DATA_VALUE)
+                val = [(val == 0xFF)]
+            elif request.function == Const.WRITE_MULTIPLE_COILS:
+                tmp = int.from_bytes(request.data, "big")
+                val = [
+                    bool(tmp & (1 << n)) for n in range(request.quantity)
+                ]
+
+            self.set_coil(address=address, value=val)
+        elif reg_type == Const.HREGS:
+            val = list(functions.to_short(byte_array=request.data,
+                                          signed=False))
+
+            if request.function in [Const.WRITE_SINGLE_REGISTER,
+                                    Const.WRITE_MULTIPLE_REGISTERS]:
+                self.set_hreg(address=address, value=val)
+        else:
+            # nothing except holding registers or coils can be set
+            return request.send_exception(Const.ILLEGAL_FUNCTION)
+
+        if self._register_dict[reg_type][address].get('on_pre_set_cb', 0):
+            _cb = self._register_dict[reg_type][address]['on_pre_set_cb']
+            if _cb(reg_type=reg_type, address=address, val=val):
                 return request.send_exception(Const.ILLEGAL_DATA_VALUE)
 
-            if reg_type == Const.COILS:
-                if request.function == Const.WRITE_SINGLE_COIL:
-                    val = request.data[0]
-                    if 0x00 < val < 0xFF:
-                        return request.send_exception(Const.ILLEGAL_DATA_VALUE)
-                    val = [(val == 0xFF)]
-                elif request.function == Const.WRITE_MULTIPLE_COILS:
-                    tmp = int.from_bytes(request.data, "big")
-                    val = [
-                        bool(tmp & (1 << n)) for n in range(request.quantity)
-                    ]
-
-                self.set_coil(address=address, value=val)
-            elif reg_type == Const.HREGS:
-                val = list(functions.to_short(byte_array=request.data,
-                                              signed=False))
-
-                if request.function in [Const.WRITE_SINGLE_REGISTER,
-                                        Const.WRITE_MULTIPLE_REGISTERS]:
-                    self.set_hreg(address=address, value=val)
-            else:
-                # nothing except holding registers or coils can be set
-                return request.send_exception(Const.ILLEGAL_FUNCTION)
-
-            self._set_changed_register(reg_type=reg_type,
-                                       address=address,
-                                       value=val)
-            if self._register_dict[reg_type][address].get('on_set_cb', 0):
-                _cb = self._register_dict[reg_type][address]['on_set_cb']
-                _cb(reg_type=reg_type, address=address, val=val)
-            return request.send_response()
-        return request.send_exception(Const.ILLEGAL_DATA_ADDRESS)
+        self._set_changed_register(reg_type=reg_type,
+                                   address=address,
+                                   value=val)
+        if self._register_dict[reg_type][address].get('on_set_cb', 0):
+            _cb = self._register_dict[reg_type][address]['on_set_cb']
+            _cb(reg_type=reg_type, address=address, val=val)
+        return request.send_response()
 
     def add_coil(self,
                  address: int,
