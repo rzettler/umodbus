@@ -73,7 +73,97 @@ class AsyncModbusRTU(AsyncModbus):
         self._itf.server_close()
 
 
-class AsyncRTUServer(RTUServer):
+class CommonAsyncRTUFunctions:
+    """
+    A mixin for functions common to both the async client and server.
+    """
+
+    async def get_request(self,
+                          unit_addr_list: Optional[List[int]] = None,
+                          timeout: Optional[int] = None) -> \
+            Optional[AsyncRequest]:
+        """@see RTUServer.get_request"""
+
+        req = await self._uart_read_frame(timeout=timeout)
+        req_no_crc = self._parse_request(req=req,
+                                         unit_addr_list=unit_addr_list)
+        try:
+            if req_no_crc is not None:
+                return AsyncRequest(interface=self, data=req_no_crc)
+        except ModbusException as e:
+            await self.send_exception_response(slave_addr=req[0],
+                                               function_code=e.function_code,
+                                               exception_code=e.exception_code)
+
+    async def _uart_read_frame(self,
+                               timeout: Optional[int] = None) -> bytearray:
+        """@see RTUServer._uart_read_frame"""
+
+        received_bytes = bytearray()
+
+        # set default timeout to at twice the inter-frame delay
+        if timeout == 0 or timeout is None:
+            timeout = 2 * self._inter_frame_delay  # in microseconds
+
+        start_us = time.ticks_us()
+
+        # stay inside this while loop at least for the timeout time
+        while (time.ticks_diff(time.ticks_us(), start_us) <= timeout):
+            # check amount of available characters
+            if self._uart.any():
+                # remember this time in microseconds
+                last_byte_ts = time.ticks_us()
+
+                # do not stop reading and appending the result to the buffer
+                # until the time between two frames elapsed
+                while time.ticks_diff(time.ticks_us(), last_byte_ts) <= self._inter_frame_delay:
+                    # WiPy only
+                    # r = self._uart.readall()
+                    r = self._uart.read()
+
+                    # if something has been read after the first iteration of
+                    # this inner while loop (within self._inter_frame_delay)
+                    if r is not None:
+                        # append the new read stuff to the buffer
+                        received_bytes.extend(r)
+
+                        # update the timestamp of the last byte being read
+                        last_byte_ts = time.ticks_us()
+            else:
+                await asyncio.sleep_ms(self._inter_frame_delay // 10)  # 175 ms, arbitrary for now
+
+            # if something has been read before the overall timeout is reached
+            if len(received_bytes) > 0:
+                return received_bytes
+
+        # return the result in case the overall timeout has been reached
+        return received_bytes
+
+    async def _send(self,
+                    modbus_pdu: bytes,
+                    slave_addr: int) -> None:
+        """@see CommonRTUFunctions._send"""
+
+        post_send_actions = super()._send(device=self,
+                                          modbus_pdu=modbus_pdu,
+                                          slave_addr=slave_addr)
+        await post_send_actions
+
+    async def _post_send(self, sleep_time_us: float) -> None:
+        """
+        The async variant of CommonRTUFunctions._post_send; used
+        to achieve async sleep behaviour while sharing code with
+        the synchronous send method.
+
+        @see CommonRTUFunctions._post_send
+        """
+
+        await hybrid_sleep(sleep_time_us)
+        if self._ctrlPin:
+            self._ctrlPin.off()
+
+
+class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
     """Asynchronous Modbus Serial host"""
 
     def __init__(self,
@@ -101,8 +191,6 @@ class AsyncRTUServer(RTUServer):
         self.event = asyncio.Event()
         self.req_handler: Callable[[Optional[AsyncRequest]],
                                    Coroutine[Any, Any, bool]] = None
-        self._uart_reader = asyncio.StreamReader(self._uart)
-        self._uart_writer = asyncio.StreamWriter(self._uart, {})
 
     async def bind(self) -> None:
         """
@@ -136,57 +224,6 @@ class AsyncRTUServer(RTUServer):
 
         self.event.set()
 
-    async def _uart_read_frame(self,
-                               timeout: Optional[int] = None) -> bytearray:
-        """
-        Reproduced from Serial._uart_read_frame
-        due to async UART read issues.
-
-        @see Serial._uart_read_frame
-        """
-
-        received_bytes = bytearray()
-
-        # set default timeout to at twice the inter-frame delay
-        if timeout == 0 or timeout is None:
-            timeout = 2 * self._inter_frame_delay  # in microseconds
-
-        start_us = time.ticks_us()
-
-        # TODO: replace this with async version when async read works
-        #       (see other _uart_read_frame in this file as reference)
-        # stay inside this while loop at least for the timeout time
-        while (time.ticks_diff(time.ticks_us(), start_us) <= timeout):
-            # check amount of available characters
-            if self._uart.any():
-                # remember this time in microseconds
-                last_byte_ts = time.ticks_us()
-
-                # do not stop reading and appending the result to the buffer
-                # until the time between two frames elapsed
-                while time.ticks_diff(time.ticks_us(), last_byte_ts) <= self._inter_frame_delay:
-                    # WiPy only
-                    # r = self._uart.readall()
-                    r = self._uart.read()
-
-                    # if something has been read after the first iteration of
-                    # this inner while loop (within self._inter_frame_delay)
-                    if r is not None:
-                        # append the new read stuff to the buffer
-                        received_bytes.extend(r)
-
-                        # update the timestamp of the last byte being read
-                        last_byte_ts = time.ticks_us()
-            else:
-                await asyncio.sleep_ms(self._inter_frame_delay // 10)  # 175 ms, arbitrary for now
-
-            # if something has been read before the overall timeout is reached
-            if len(received_bytes) > 0:
-                return received_bytes
-
-        # return the result in case the overall timeout has been reached
-        return received_bytes
-
     async def send_response(self,
                             slave_addr: int,
                             function_code: int,
@@ -198,7 +235,7 @@ class AsyncRTUServer(RTUServer):
                             request: Optional[AsyncRequest] = None) -> None:
         """
         Asynchronous equivalent to Serial.send_response
-        @see Serial.send_response for common (leading) parameters
+        @see RTUServer.send_response for common (leading) parameters
 
         :param      request:     Ignored; kept for compatibility
                                  with AsyncRequest
@@ -223,7 +260,7 @@ class AsyncRTUServer(RTUServer):
             -> None:
         """
         Asynchronous equivalent to Serial.send_exception_response
-        @see Serial.send_exception_response for common (leading) parameters
+        @see RTUServer.send_exception_response for common (leading) parameters
 
         :param      request:     Ignored; kept for compatibility
                                  with AsyncRequest
@@ -235,34 +272,6 @@ class AsyncRTUServer(RTUServer):
                                                exception_code=exception_code)
         if task is not None:
             await task
-
-    async def get_request(self,
-                          unit_addr_list: Optional[List[int]] = None,
-                          timeout: Optional[int] = None) -> \
-            Optional[AsyncRequest]:
-        """@see RTUServer.get_request"""
-
-        req = await self._uart_read_frame(timeout=timeout)
-        req_no_crc = self._parse_request(req=req,
-                                         unit_addr_list=unit_addr_list)
-        try:
-            if req_no_crc is not None:
-                print("2.3.4 creating AsyncRequest")
-                return AsyncRequest(interface=self, data=req_no_crc)
-        except ModbusException as e:
-            print("2.3.5 exception occurred when creating AsyncRequest:", e)
-            await self.send_exception_response(slave_addr=req[0],
-                                               function_code=e.function_code,
-                                               exception_code=e.exception_code)
-
-    async def _send(self,
-                    modbus_pdu: bytes,
-                    slave_addr: int) -> None:
-        """@see CommonRTUFunctions._send"""
-
-        await _async_send(device=self,
-                          modbus_pdu=modbus_pdu,
-                          slave_addr=slave_addr)
 
     def set_params(self,
                    addr_list: Optional[List[int]],
@@ -283,7 +292,7 @@ class AsyncRTUServer(RTUServer):
         self.req_handler = req_handler
 
 
-class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
+class AsyncSerial(CommonRTUFunctions, CommonAsyncRTUFunctions, CommonAsyncModbusFunctions):
     """Asynchronous Modbus Serial client"""
 
     def __init__(self,
@@ -332,47 +341,9 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                     break
 
             # wait for the maximum time between two frames
-            await asyncio.sleep(self._inter_frame_delay)
+            await hybrid_sleep(self._inter_frame_delay)
 
         return response
-
-    async def _uart_read_frame(self,
-                               timeout: Optional[int] = None) -> bytearray:
-        """@see Serial._uart_read_frame"""
-
-        received_bytes = bytearray()
-
-        # set timeout to at least twice the time between two
-        # frames in case the timeout was set to zero or None
-        if timeout == 0 or timeout is None:
-            timeout = 2 * self._inter_frame_delay  # in microseconds
-
-        total_timeout = timeout * US_TO_S
-        frame_timeout = self._inter_frame_delay * US_TO_S
-
-        try:
-            # wait until overall timeout to read at least one byte
-            current_timeout = total_timeout
-            while True:
-                read_task = self._uart_reader.read()
-                data = await asyncio.wait_for(read_task, current_timeout)
-                received_bytes.extend(data)
-
-                # if data received, switch to waiting until inter-frame
-                # timeout is exceeded, to delineate two separate frames
-                current_timeout = frame_timeout
-        except asyncio.TimeoutError:
-            pass  # stop when no data left to read before timeout
-        return received_bytes
-
-    async def _send(self,
-                    modbus_pdu: bytes,
-                    slave_addr: int) -> None:
-        """@see Serial._send"""
-
-        await _async_send(device=self,
-                          modbus_pdu=modbus_pdu,
-                          slave_addr=slave_addr)
 
     async def _send_receive(self,
                             slave_addr: int,
@@ -389,123 +360,3 @@ class AsyncSerial(CommonRTUFunctions, CommonAsyncModbusFunctions):
                                        slave_addr=slave_addr,
                                        function_code=modbus_pdu[0],
                                        count=count)
-
-    async def send_response(self,
-                            slave_addr: int,
-                            function_code: int,
-                            request_register_addr: int,
-                            request_register_qty: int,
-                            request_data: list,
-                            values: Optional[list] = None,
-                            signed: bool = True,
-                            request: Optional[AsyncRequest] = None) -> None:
-        """
-        Asynchronous equivalent to Serial.send_response
-        @see Serial.send_response for common (leading) parameters
-
-        :param      request:     Ignored; kept for compatibility
-                                 with AsyncRequest
-        :type       request:     AsyncRequest, optional
-        """
-
-        task = super().send_response(slave_addr=slave_addr,
-                                     function_code=function_code,
-                                     request_register_addr=request_register_addr,  # noqa: E501
-                                     request_register_qty=request_register_qty,
-                                     request_data=request_data,
-                                     values=values,
-                                     signed=signed)
-        if task is not None:
-            await task
-
-    async def send_exception_response(self,
-                                      slave_addr: int,
-                                      function_code: int,
-                                      exception_code: int,
-                                      request: Optional[AsyncRequest] = None) \
-            -> None:
-        """
-        Asynchronous equivalent to Serial.send_exception_response
-        @see Serial.send_exception_response for common (leading) parameters
-
-        :param      request:     Ignored; kept for compatibility
-                                 with AsyncRequest
-        :type       request:     AsyncRequest, optional
-        """
-
-        task = super().send_exception_response(slave_addr=slave_addr,
-                                               function_code=function_code,
-                                               exception_code=exception_code)
-        if task is not None:
-            await task
-
-    async def get_request(self,
-                          unit_addr_list: Optional[List[int]] = None,
-                          timeout: Optional[int] = None) -> \
-            Optional[AsyncRequest]:
-        """@see Serial.get_request"""
-
-        req = await self._uart_read_frame(timeout=timeout)
-        req_no_crc = self._parse_request(req=req,
-                                         unit_addr_list=unit_addr_list)
-        try:
-            if req_no_crc is not None:
-                return AsyncRequest(interface=self, data=req_no_crc)
-        except ModbusException as e:
-            await self.send_exception_response(slave_addr=req[0],
-                                               function_code=e.function_code,
-                                               exception_code=e.exception_code)
-
-
-async def _async_send(device: Union[AsyncRTUServer, AsyncSerial],
-                      modbus_pdu: bytes,
-                      slave_addr: int) -> None:
-    """
-    Send modbus frame via UART asynchronously
-
-    Note: This is not part of a class because the _send()
-    function exists in CommonRTUFunctions, which RTUServer
-    extends. Putting this in a CommonAsyncRTUFunctions class
-    would result in a rather strange MRO/inheritance chain,
-    so the _send functions in the client and server just
-    delegate to this function.
-
-    :param      device:     The self object calling this function
-    :type       device:     Union[AsyncRTUServer, AsyncSerial]
-
-    @see CommonRTUFunctions._send
-    """
-
-    modbus_adu = device._form_serial_adu(modbus_pdu, slave_addr)
-
-    if device._ctrlPin:
-        device._ctrlPin.on()
-        # wait until the control pin really changed
-        # 85-95us (ESP32 @ 160/240MHz)
-        time.sleep_us(200)
-
-    # the timing of this part is critical:
-    # - if we disable output too early,
-    #   the command will not be received in full
-    # - if we disable output too late,
-    #   the incoming response will lose some data at the beginning
-    # easiest to just wait for the bytes to be sent out on the wire
-
-    send_start_time = time.ticks_us()
-    # 360-400us @ 9600-115200 baud (measured) (ESP32 @ 160/240MHz)
-    device._uart.write(modbus_adu)
-    send_finish_time = time.ticks_us()
-
-    if device._has_uart_flush:
-        device._uart.flush()
-        await hybrid_sleep(device._t1char)
-    else:
-        total_sleep_us = (
-            device._t1char * len(modbus_adu) -    # total frame time in us
-            time.ticks_diff(send_finish_time, send_start_time) +
-            100     # only required at baudrates above 57600, but hey 100us
-        )
-        await hybrid_sleep(total_sleep_us)
-
-    if device._ctrlPin:
-        device._ctrlPin.off()

@@ -7,9 +7,10 @@
 # see the Pycom Licence v1.0 document supplied with this file, or
 # available at https://www.pycom.io/opensource/licensing
 #
+# system packages
+import struct
 
 # custom packages
-from .safe_struct import pack, unpack
 from . import const as Const
 
 # typing not natively supported on MicroPython
@@ -31,7 +32,7 @@ def read_coils(starting_address: int, quantity: int) -> bytes:
     if not (1 <= quantity <= 2000):
         raise ValueError('Invalid number of coils')
 
-    return pack('>BHH', Const.READ_COILS, starting_address, quantity)
+    return struct.pack('>BHH', Const.READ_COILS, starting_address, quantity)
 
 
 def read_discrete_inputs(starting_address: int, quantity: int) -> bytes:
@@ -49,7 +50,7 @@ def read_discrete_inputs(starting_address: int, quantity: int) -> bytes:
     if not (1 <= quantity <= 2000):
         raise ValueError('Invalid number of discrete inputs')
 
-    return pack('>BHH',
+    return struct.pack('>BHH',
                 Const.READ_DISCRETE_INPUTS,
                 starting_address,
                 quantity)
@@ -70,7 +71,7 @@ def read_holding_registers(starting_address: int, quantity: int) -> bytes:
     if not (1 <= quantity <= 125):
         raise ValueError('Invalid number of holding registers')
 
-    return pack('>BHH',
+    return struct.pack('>BHH',
                 Const.READ_HOLDING_REGISTERS,
                 starting_address,
                 quantity)
@@ -91,7 +92,7 @@ def read_input_registers(starting_address: int, quantity: int) -> bytes:
     if not (1 <= quantity <= 125):
         raise ValueError('Invalid number of input registers')
 
-    return pack('>BHH',
+    return struct.pack('>BHH',
                 Const.READ_INPUT_REGISTER,
                 starting_address,
                 quantity)
@@ -119,7 +120,7 @@ def write_single_coil(output_address: int,
         else:
             output_value = 0x0000
 
-    return pack('>BHH',
+    return struct.pack('>BHH',
                 Const.WRITE_SINGLE_COIL,
                 output_address,
                 output_value)
@@ -143,7 +144,7 @@ def write_single_register(register_address: int,
     """
     fmt = 'h' if signed else 'H'
 
-    return pack('>BH' + fmt,
+    return struct.pack('>BH' + fmt,
                 Const.WRITE_SINGLE_REGISTER,
                 register_address,
                 register_value)
@@ -182,7 +183,7 @@ def write_multiple_coils(starting_address: int,
     if quantity % 8:
         byte_count += 1
 
-    return pack('>BHHB' + fmt,
+    return struct.pack('>BHHB' + fmt,
                 Const.WRITE_MULTIPLE_COILS,
                 starting_address,
                 quantity,
@@ -213,7 +214,7 @@ def write_multiple_registers(starting_address: int,
     byte_count = quantity * 2
     fmt = ('h' if signed else 'H') * quantity
 
-    return pack('>BHHB' + fmt,
+    return struct.pack('>BHHB' + fmt,
                 Const.WRITE_MULTIPLE_REGISTERS,
                 starting_address,
                 quantity,
@@ -249,7 +250,7 @@ def validate_resp_data(data: bytes,
     fmt = '>H' + ('h' if signed else 'H')
 
     if function_code in [Const.WRITE_SINGLE_COIL, Const.WRITE_SINGLE_REGISTER]:
-        resp_addr, resp_value = unpack(fmt, data)
+        resp_addr, resp_value = struct.unpack(fmt, data)
 
         # if bool(True) or int(1) is used as "output_value" of
         # "write_single_coil" it will be internally converted to int(0xFF00),
@@ -265,7 +266,7 @@ def validate_resp_data(data: bytes,
             return True
     elif function_code in [Const.WRITE_MULTIPLE_COILS,
                            Const.WRITE_MULTIPLE_REGISTERS]:
-        resp_addr, resp_qty = unpack(fmt, data)
+        resp_addr, resp_qty = struct.unpack(fmt, data)
 
         if (address == resp_addr) and (quantity == resp_qty):
             return True
@@ -312,7 +313,7 @@ def response(function_code: int,
             output_value.append(output)
 
         fmt = 'B' * len(output_value)
-        return pack('>BB' + fmt,
+        return struct.pack('>BB' + fmt,
                     function_code,
                     ((len(value_list) - 1) // 8) + 1,
                     *output_value)
@@ -331,21 +332,21 @@ def response(function_code: int,
             for s in signed:
                 fmt += 'h' if s else 'H'
 
-        return pack('>BB' + fmt,
+        return struct.pack('>BB' + fmt,
                     function_code,
                     quantity * 2,
                     *value_list)
 
     elif function_code in [Const.WRITE_SINGLE_COIL,
                            Const.WRITE_SINGLE_REGISTER]:
-        return pack('>BHBB',
+        return struct.pack('>BHBB',
                     function_code,
                     request_register_addr,
                     *request_data)
 
     elif function_code in [Const.WRITE_MULTIPLE_COILS,
                            Const.WRITE_MULTIPLE_REGISTERS]:
-        return pack('>BHH',
+        return struct.pack('>BHH',
                     function_code,
                     request_register_addr,
                     request_register_qty)
@@ -365,7 +366,7 @@ def exception_response(function_code: int, exception_code: int) -> bytes:
     :returns:   Packed Modbus message
     :rtype:     bytes
     """
-    return pack('>BB', Const.ERROR_BIAS + function_code, exception_code)
+    return struct.pack('>BB', Const.ERROR_BIAS + function_code, exception_code)
 
 
 def bytes_to_bool(byte_list: bytes, bit_qty: Optional[int] = 1) -> List[bool]:
@@ -413,7 +414,7 @@ def to_short(byte_array: bytes, signed: bool = True) -> bytes:
     response_quantity = int(len(byte_array) / 2)
     fmt = '>' + (('h' if signed else 'H') * response_quantity)
 
-    return unpack(fmt, byte_array)
+    return struct.unpack(fmt, byte_array)
 
 
 def float_to_bin(num: float) -> bin:
@@ -429,10 +430,10 @@ def float_to_bin(num: float) -> bin:
     :rtype:     bin
     """
     # no "zfill" available in MicroPython
-    # return bin(struct.unpack('!I', struct.pack('!f', num))[0])[2:].zfill(32)
+    # return bin(struct.struct.unpack('!I', struct.struct.pack('!f', num))[0])[2:].zfill(32)
 
     return '{:0>{w}}'.format(
-        bin(unpack('!I', pack('!f', num))[0])[2:],
+        bin(struct.unpack('!I', struct.pack('!f', num))[0])[2:],
         w=32)
 
 
@@ -446,7 +447,7 @@ def bin_to_float(binary: str) -> float:
     :returns:   Converted floating point value
     :rtype:     float
     """
-    return unpack('!f', pack('!I', int(binary, 2)))[0]
+    return struct.unpack('!f', struct.pack('!I', int(binary, 2)))[0]
 
 
 def int_to_bin(num: int) -> str:

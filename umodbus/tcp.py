@@ -11,6 +11,7 @@
 # system packages
 # import random
 import socket
+import struct
 import time
 
 # custom packages
@@ -19,7 +20,6 @@ from . import const as Const
 from .common import Request, CommonModbusFunctions
 from .common import ModbusException
 from .modbus import Modbus
-from .safe_struct import pack, unpack
 
 # typing not natively supported on MicroPython
 from .typing import Optional, Tuple, List, Union
@@ -101,7 +101,7 @@ class CommonTCPFunctions(object):
         trans_id = self.trans_id_ctr
         self.trans_id_ctr += 1
 
-        mbap_hdr = pack(
+        mbap_hdr = struct.pack(
             '>HHHB', trans_id, 0, len(modbus_pdu) + 1, slave_addr)
 
         return mbap_hdr, trans_id
@@ -129,7 +129,7 @@ class CommonTCPFunctions(object):
         :returns:   Modbus response content
         :rtype:     bytes
         """
-        rec_tid, rec_pid, rec_len, rec_uid, rec_fc = unpack(
+        rec_tid, rec_pid, rec_len, rec_uid, rec_fc = struct.unpack(
             '>HHHBB', response[:Const.MBAP_HDR_LENGTH + 1])
 
         if (trans_id != rec_tid):
@@ -281,7 +281,7 @@ class TCPServer(object):
         """
         size = len(modbus_pdu)
         fmt = 'B' * size
-        adu = pack('>HHHB' + fmt, self._req_tid, 0, size + 1, slave_addr, *modbus_pdu)
+        adu = struct.pack('>HHHB' + fmt, self._req_tid, 0, size + 1, slave_addr, *modbus_pdu)
         self._client_sock.send(adu)
 
     def send_response(self,
@@ -375,7 +375,7 @@ class TCPServer(object):
                     return None
 
                 req_header_no_uid = req[:Const.MBAP_HDR_LENGTH - 1]
-                self._req_tid, req_pid, req_len = unpack('>HHH', req_header_no_uid)
+                self._req_tid, req_pid, req_len = struct.unpack('>HHH', req_header_no_uid)
                 req_uid_and_pdu = req[Const.MBAP_HDR_LENGTH - 1:Const.MBAP_HDR_LENGTH + req_len - 1]
             except OSError:
                 # MicroPython raises an OSError instead of socket.timeout

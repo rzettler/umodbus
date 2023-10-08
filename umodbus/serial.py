@@ -11,10 +11,10 @@
 # system packages
 from machine import UART
 from machine import Pin
+import struct
 import time
 
 # custom packages
-from .safe_struct import pack
 from . import const as Const
 from . import functions
 from .common import Request, CommonModbusFunctions
@@ -150,7 +150,7 @@ class CommonRTUFunctions(object):
         for char in data:
             crc = (crc >> 8) ^ Const.CRC16_TABLE[((crc) ^ char) & 0xFF]
 
-        return pack('<H', crc)
+        return struct.pack('<H', crc)
 
     def _form_serial_adu(self, modbus_pdu: bytes, slave_addr: int) -> bytearray:
         """
@@ -172,7 +172,7 @@ class CommonRTUFunctions(object):
         modbus_adu.extend(self._calculate_crc16(modbus_adu))
         return modbus_adu
 
-    def _send(self, modbus_pdu: bytes, slave_addr: int) -> None:
+    def _send(self, modbus_pdu: bytes, slave_addr: int) -> Optional[Awaitable]:
         """
         Send Modbus frame via UART
 
@@ -182,7 +182,13 @@ class CommonRTUFunctions(object):
         :type       modbus_pdu:  bytes
         :param      slave_addr:  The slave address
         :type       slave_addr:  int
+
+        :returns:   None if called by the synchronous variant, or else an
+                    Awaitable is returned that represents the actions to take
+                    after the request is sent (e.g. sleeping)
+        :rtype:     Optional[Awaitable]
         """
+
         # modbus_adu: Modbus Application Data Unit
         # consists of the Modbus PDU, with slave address prepended and checksum appended
         modbus_adu = self._form_serial_adu(modbus_pdu, slave_addr)
@@ -205,17 +211,24 @@ class CommonRTUFunctions(object):
         self._uart.write(modbus_adu)
         send_finish_time = time.ticks_us()
 
+        sleep_time_us = self._t1char
         if self._has_uart_flush:
             self._uart.flush()
-            time.sleep_us(self._t1char)
         else:
             sleep_time_us = (
                 self._t1char * len(modbus_adu) -    # total frame time in us
                 time.ticks_diff(send_finish_time, send_start_time) +
                 100     # only required at baudrates above 57600, but hey 100us
             )
-            time.sleep_us(sleep_time_us)
 
+        return self._post_send(sleep_time_us)
+
+    def _post_send(self, sleep_time_us: float) -> None:
+        """
+        Sleeps after sending a request, along with other post-send actions.
+        """
+
+        time.sleep_us(sleep_time_us)
         if self._ctrlPin:
             self._ctrlPin.off()
 
