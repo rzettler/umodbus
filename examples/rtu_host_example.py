@@ -21,7 +21,7 @@ from examples.common.register_definitions import register_definitions
 from examples.common.rtu_host_common import IS_DOCKER_MICROPYTHON
 from examples.common.rtu_host_common import rtu_pins, baudrate
 from examples.common.rtu_host_common import slave_addr, uart_id, read_timeout, exit
-from examples.common.host_tests import run_sync_host_tests
+from examples.common.sync_host_tests import run_host_tests
 
 host = ModbusRTUMaster(
     pins=rtu_pins,                  # given as tuple (TX, RX)
@@ -51,8 +51,8 @@ print('Requesting and updating data on RTU client at address {} with {} baud'.
       format(slave_addr, baudrate))
 print()
 
-run_sync_host_tests(host=host,
-                    slave_addr=slave_addr,
-                    register_definitions=register_definitions)
+run_host_tests(host=host,
+               slave_addr=slave_addr,
+               register_definitions=register_definitions)
 
 exit()

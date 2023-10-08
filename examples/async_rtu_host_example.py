@@ -26,7 +26,7 @@ from examples.common.register_definitions import register_definitions
 from examples.common.rtu_host_common import IS_DOCKER_MICROPYTHON
 from examples.common.rtu_host_common import slave_addr, uart_id, read_timeout
 from examples.common.rtu_host_common import baudrate, rtu_pins, exit
-from examples.common.host_tests import run_async_host_tests
+from examples.common.async_host_tests import run_host_tests
 
 
 async def start_rtu_host(rtu_pins,
@@ -60,9 +60,9 @@ async def start_rtu_host(rtu_pins,
         # works only with fake machine UART
         assert host._uart._is_server is False
 
-    await run_async_host_tests(host=host,
-                               slave_addr=slave_addr,
-                               register_definitions=register_definitions)
+    await run_host_tests(host=host,
+                         slave_addr=slave_addr,
+                         register_definitions=register_definitions)
 
 # create and run task
 task = start_rtu_host(

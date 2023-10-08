@@ -24,7 +24,7 @@ from umodbus.asynchronous.tcp import AsyncTCP as ModbusTCPMaster
 from examples.common.register_definitions import register_definitions
 from examples.common.tcp_host_common import slave_ip, slave_tcp_port
 from examples.common.tcp_host_common import slave_addr, exit
-from examples.common.host_tests import run_async_host_tests
+from examples.common.async_host_tests import run_host_tests
 
 
 async def start_tcp_client(host, port, unit_id, timeout):
@@ -43,9 +43,9 @@ async def start_tcp_client(host, port, unit_id, timeout):
               format(host, port))
         print()
 
-        await run_async_host_tests(host=client,
-                                   slave_addr=unit_id,
-                                   register_definitions=register_definitions)
+        await run_host_tests(host=client,
+                             slave_addr=unit_id,
+                             register_definitions=register_definitions)
 
 
 # create and run task
