@@ -59,6 +59,12 @@ def setup_callbacks(client, register_definitions):
         client.set_ireg(address=address, value=new_val)
         print('Incremented current value by +1 before sending response')
 
+    def my_holding_register_pre_set_cb(reg_type, address, val):
+        print('Custom callback, called on setting {} at {} to: {}'.
+              format(reg_type, address, val))
+
+        return val not in range(0, 101)
+
     # reset all registers back to their default value with a callback
     register_definitions['COILS']['RESET_REGISTER_DATA_COIL']['on_set_cb'] = \
         reset_data_registers_cb
@@ -70,13 +76,17 @@ def setup_callbacks(client, register_definitions):
     # add callbacks for different Modbus functions
     # each register can have a different callback
     # coils and holding register support callbacks for set and get
+    # as well as before-set - but before-set can only be specified
+    # in register_definitions, not dynamically as it is an "extra"
+    # callback
+    register_definitions['HREGS']['EXAMPLE_HREG']['on_pre_set_cb'] = \
+        my_holding_register_pre_set_cb
     register_definitions['COILS']['EXAMPLE_COIL']['on_set_cb'] = my_coil_set_cb
     register_definitions['COILS']['EXAMPLE_COIL']['on_get_cb'] = my_coil_get_cb
     register_definitions['HREGS']['EXAMPLE_HREG']['on_set_cb'] = \
         my_holding_register_set_cb
     register_definitions['HREGS']['EXAMPLE_HREG']['on_get_cb'] = \
         my_holding_register_get_cb
-
     # discrete inputs and input registers support only get callbacks as they can't
     # be set externally
     register_definitions['ISTS']['EXAMPLE_ISTS']['on_get_cb'] = \

@@ -34,17 +34,6 @@ def _write_coils_test(host, slave_addr, register_definitions, sleep_fn, **kwargs
     return {"new_coil_val": new_coil_val}
 
 
-def _read_coils_test_2(host, slave_addr, register_definitions, sleep_fn, **kwargs):
-    coil_address = kwargs["coil_address"]
-    coil_qty = kwargs["coil_qty"]
-    coil_status = host.read_coils(
-        slave_addr=slave_addr,
-        starting_addr=coil_address,
-        coil_qty=coil_qty)
-    print('Status of COIL {}: {}'.format(coil_address, coil_status))
-    sleep_fn(1)
-
-
 def _read_hregs_test(host, slave_addr, register_definitions, sleep_fn, **kwargs):
     hreg_address = register_definitions['HREGS']['EXAMPLE_HREG']['register']
     register_qty = register_definitions['HREGS']['EXAMPLE_HREG']['len']
@@ -71,15 +60,18 @@ def _write_hregs_test(host, slave_addr, register_definitions, sleep_fn, **kwargs
     sleep_fn(1)
 
 
-def _read_hregs_test_2(host, slave_addr, register_definitions, sleep_fn, **kwargs):
+def _write_hregs_beyond_limits_test(host, slave_addr, register_definitions, sleep_fn, **kwargs):
+    # try to set value outside specified range of [0, 101]
+    # in register_definitions on_pre_set_cb callback
+    new_hreg_val = 500
     hreg_address = kwargs["hreg_address"]
-    register_qty = kwargs["register_qty"]
-    register_value = host.read_holding_registers(
+    operation_status = host.write_single_register(
         slave_addr=slave_addr,
-        starting_addr=hreg_address,
-        register_qty=register_qty,
+        register_address=hreg_address,
+        register_value=new_hreg_val,
         signed=False)
-    print('Status of HREG {}: {}'.format(hreg_address, register_value))
+    # should be error: illegal data value
+    print('Result of setting HREG {}: {}'.format(hreg_address, operation_status))
     sleep_fn(1)
 
 
@@ -119,14 +111,15 @@ def _reset_registers_test(host, slave_addr, register_definitions, sleep_fn, **kw
     sleep_fn(1)
 
 
-def run_host_tests(host, slave_addr, register_definitions):
+def run_host_tests(host, slave_addr, register_definitions, exit_on_timeout=False):
     """Runs tests with a Modbus host (client)"""
 
     import time
 
     callbacks = [
-        _read_coils_test, _write_coils_test, _read_coils_test_2,
-        _read_hregs_test, _write_hregs_test, _read_hregs_test_2,
+        _read_coils_test, _write_coils_test, _read_coils_test,
+        _read_hregs_test, _write_hregs_test, _read_hregs_test,
+        _write_hregs_beyond_limits_test, _read_hregs_test,
         _read_ists_test, _read_iregs_test, _reset_registers_test
     ]
 
@@ -134,18 +127,20 @@ def run_host_tests(host, slave_addr, register_definitions):
     current_callback_idx = 0
     # run test pipeline
     while current_callback_idx < len(callbacks):
-        while True:
-            try:
-                current_callback = callbacks[current_callback_idx]
-                new_vars = current_callback(
-                    host=host, slave_addr=slave_addr, register_definitions=register_definitions,
-                    sleep_fn=time.sleep, **test_vars)
+        try:
+            current_callback = callbacks[current_callback_idx]
+            new_vars = current_callback(
+                host=host, slave_addr=slave_addr, register_definitions=register_definitions,
+                sleep_fn=time.sleep, **test_vars)
 
-                # test succeeded, move on to the next
+            # test succeeded, move on to the next
+            if new_vars is not None:
                 test_vars.update(new_vars)
-                current_callback_idx += 1
-                print()
-            except OSError as err:
-                print("Potential timeout error:", err)
+            current_callback_idx += 1
+            print()
+        except OSError as err:
+            print("Potential timeout error:", err)
+            if exit_on_timeout:
+                break
 
     print("Finished requesting/setting data on client")
