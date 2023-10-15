@@ -144,6 +144,7 @@ class CommonAsyncRTUFunctions:
                     slave_addr: int) -> None:
         """@see CommonRTUFunctions._send"""
 
+        print("async RTU: _send() called")
         post_send_actions = super()._send(device=self,
                                           modbus_pdu=modbus_pdu,
                                           slave_addr=slave_addr)
@@ -158,6 +159,7 @@ class CommonAsyncRTUFunctions:
         @see CommonRTUFunctions._post_send
         """
 
+        print("async RTU: _post_send() called")
         await hybrid_sleep(sleep_time_us)
         if self._ctrlPin:
             self._ctrlPin.off()
@@ -242,6 +244,7 @@ class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
         :type       request:     AsyncRequest, optional
         """
 
+        print("async RTU: calling send_response()")
         task = super().send_response(slave_addr=slave_addr,
                                      function_code=function_code,
                                      request_register_addr=request_register_addr,  # noqa: E501
@@ -249,6 +252,7 @@ class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
                                      request_data=request_data,
                                      values=values,
                                      signed=signed)
+        print("async RTU: send_response() called, task is:", task)
         if task is not None:
             await task
 
@@ -267,9 +271,11 @@ class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
         :type       request:     AsyncRequest, optional
         """
 
+        print("async RTU: calling send_exception_response()")
         task = super().send_exception_response(slave_addr=slave_addr,
                                                function_code=function_code,
                                                exception_code=exception_code)
+        print("async RTU: called send_exception_response(), task is:", task)
         if task is not None:
             await task
 

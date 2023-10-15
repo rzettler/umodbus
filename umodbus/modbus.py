@@ -74,7 +74,7 @@ class Modbus(object):
         if request is None:
             request = self._itf.get_request(unit_addr_list=self._addr_list,
                                             timeout=0)
-        # if get_request is async or none, hands it off to the async subclass
+        # if get_request is an async generator or None, hands it off to the async subclass
         if not isinstance(request, Request):
             return request
 

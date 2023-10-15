@@ -179,11 +179,11 @@ class AsyncTCPServer(TCPServer):
         size = len(modbus_pdu)
         fmt = 'B' * size
         adu = struct.pack('>HHHB' + fmt,
-                   req_tid,
-                   0,
-                   size + 1,
-                   slave_addr,
-                   *modbus_pdu)
+                          req_tid,
+                          0,
+                          size + 1,
+                          slave_addr,
+                          *modbus_pdu)
         writer.write(adu)
         await writer.drain()
 
@@ -248,6 +248,9 @@ class AsyncTCPServer(TCPServer):
 
         try:
             header_len = Const.MBAP_HDR_LENGTH - 1
+            # TODO add "on_client_connected" and
+            # "on_client_disconnected" callbacks for TCP
+            # dest_addr = writer.get_extra_info('peername')
 
             while True:
                 task = reader.read(128)
@@ -259,7 +262,7 @@ class AsyncTCPServer(TCPServer):
 
                 req_header_no_uid = req[:header_len]
                 req_tid, req_pid, req_len = struct.unpack('>HHH',
-                                                   req_header_no_uid)
+                                                          req_header_no_uid)
                 req_uid_and_pdu = req[header_len:header_len + req_len]
                 if (req_pid != 0):
                     raise ValueError(
