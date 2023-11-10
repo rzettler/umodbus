@@ -221,14 +221,14 @@ class CommonRTUFunctions(object):
                 100     # only required at baudrates above 57600, but hey 100us
             )
 
-        print("serial::_send -> _post_send()")
+        #print("serial::_send -> _post_send()")
         return self._post_send(sleep_time_us)
 
     def _post_send(self, sleep_time_us: float) -> None:
         """
         Sleeps after sending a request, along with other post-send actions.
         """
-        print("serial::post_send")
+        #print("serial::post_send")
         time.sleep_us(sleep_time_us)
         if self._ctrlPin:
             self._ctrlPin.off()

@@ -31,6 +31,7 @@ class AsyncRequest(Request):
         :type       signed:  bool
         """
 
+        print("sending async response...")
         await self._itf.send_response(slave_addr=self.unit_addr,
                                       function_code=self.function,
                                       request_register_addr=self.register_addr,

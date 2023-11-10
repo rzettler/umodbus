@@ -80,6 +80,7 @@ class Request(object):
         :param      signed:  Indicates if signed values are used
         :type       signed:  bool
         """
+        print("sending sync response...")
         self._itf.send_response(self.unit_addr,
                                 self.function,
                                 self.register_addr,
