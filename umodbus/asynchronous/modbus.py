@@ -59,6 +59,7 @@ class AsyncModbus(Modbus):
         """@see Modbus._process_read_access"""
 
         task = super()._process_read_access(request, reg_type)
+        print("async process_read_access task = ", task)
         if task is not None:
             await task
 
@@ -68,5 +69,6 @@ class AsyncModbus(Modbus):
         """@see Modbus._process_write_access"""
 
         task = super()._process_write_access(request, reg_type)
+        print("async process_write_access task = ", task)
         if task is not None:
             await task
