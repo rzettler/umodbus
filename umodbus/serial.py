@@ -103,6 +103,8 @@ class CommonRTUFunctions(object):
         :param      read_timeout:   The read timeout in ms.
         :type       read_timeout:   int
         """
+
+        super().__init__()
         # UART flush function is introduced in Micropython v1.20.0
         self._has_uart_flush = callable(getattr(UART, "flush", None))
         self._uart = UART(uart_id,
