@@ -161,7 +161,7 @@ class CommonAsyncRTUFunctions:
             self._ctrlPin.off()
 
 
-class AsyncRTUServer(RTUServer, CommonAsyncRTUFunctions):
+class AsyncRTUServer(CommonAsyncRTUFunctions, RTUServer):
     """Asynchronous Modbus Serial host"""
 
     def __init__(self,
