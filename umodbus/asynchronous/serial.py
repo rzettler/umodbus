@@ -73,7 +73,7 @@ class AsyncModbusRTU(AsyncModbus):
         self._itf.server_close()
 
 
-class CommonAsyncRTUFunctions:
+class CommonAsyncRTUFunctions(CommonRTUFunctions):
     """
     A mixin for functions common to both the async client and server.
     """
@@ -294,7 +294,7 @@ class AsyncRTUServer(CommonAsyncRTUFunctions, RTUServer):
         self.req_handler = req_handler
 
 
-class AsyncSerial(CommonAsyncRTUFunctions, CommonAsyncModbusFunctions, CommonRTUFunctions):
+class AsyncSerial(CommonAsyncModbusFunctions, CommonAsyncRTUFunctions):
     """Asynchronous Modbus Serial client"""
 
     def __init__(self,
