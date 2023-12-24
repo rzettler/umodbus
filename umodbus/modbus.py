@@ -183,14 +183,12 @@ class Modbus(object):
 
         if address in self._register_dict[reg_type]:
 
-            if self._register_dict[reg_type][address].get('on_get_cb', 0):
-                vals = self._create_response(request=request,
-                                             reg_type=reg_type)
-                _cb = self._register_dict[reg_type][address]['on_get_cb']
+            vals = self._create_response(request=request, reg_type=reg_type)
+            _cb = self._register_dict[reg_type][address].get('on_get_cb', None)
+            if _cb:
                 _cb(reg_type=reg_type, address=address, val=vals)
 
-            vals = self._create_response(request=request, reg_type=reg_type)
-            request.send_response(vals)
+            return request.send_response(vals)
         else:
             request.send_exception(Const.ILLEGAL_DATA_ADDRESS)
 
