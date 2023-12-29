@@ -39,6 +39,22 @@ class AsyncModbusTCP(AsyncModbus):
             AsyncTCPServer(),
             addr_list
         )
+        self._setup_extra_callbacks()
+
+    def _setup_extra_callbacks(self) -> None:
+        """Sets up the on_connect and on_disconnect callbacks"""
+
+        extra_callbacks = self._register_dict.get("META", None)
+        if extra_callbacks is None:
+            return
+
+        on_connect_cb = extra_callbacks.get("on_tcp_connect_cb", None)
+        if on_connect_cb is not None:
+            self._itf.set_on_connect_cb(on_connect_cb)
+
+        on_disconnect_cb = extra_callbacks.get("on_tcp_disconnect_cb", None)
+        if on_disconnect_cb is not None:
+            self._itf.set_on_disconnect_cb(on_disconnect_cb)
 
     async def bind(self,
                    local_ip: str,
@@ -148,6 +164,28 @@ class AsyncTCPServer(TCPServer):
                                                  int]] = {}
         self.timeout: float = timeout
         self._lock: asyncio.Lock = None
+        self._on_connect_cb: Optional[Callable[[str, int], None]] = None
+        self._on_disconnect_cb: Optional[Callable[[str, int], None]] = None
+
+    def set_on_connect_cb(self, cb: Callable[[str, int], None]) -> None:
+        """
+        Sets the callback to be called when a client has connected.
+
+        :param      callback:         Callback to be called on client connect.
+        :type       callback:         Callable that takes a pair of (addr, port)
+        """
+
+        self._on_connect_cb = cb
+
+    def set_on_disconnect_cb(self, cb: Callable[[str, int], None]) -> None:
+        """
+        Sets the callback to be called when a client has disconnected.
+
+        :param      callback:         Callback to be called on client disconnect.
+        :type       callback:         Callable that takes a pair of (addr, port)
+        """
+
+        self._on_disconnect_cb = cb
 
     async def bind(self,
                    local_ip: str,
@@ -248,9 +286,9 @@ class AsyncTCPServer(TCPServer):
 
         try:
             header_len = Const.MBAP_HDR_LENGTH - 1
-            # TODO add "on_client_connected" and
-            # "on_client_disconnected" callbacks for TCP
-            # dest_addr = writer.get_extra_info('peername')
+            dest_addr = writer.get_extra_info('peername')
+            if self._on_connect_cb is not None:
+                self._on_connect_cb(*dest_addr)
 
             while True:
                 task = reader.read(128)
@@ -291,6 +329,8 @@ class AsyncTCPServer(TCPServer):
             if not isinstance(err, OSError):  # or err.errno != 104:
                 print("{0}: ".format(type(err).__name__), err)
         finally:
+            if self._on_disconnect_cb is not None:
+                self._on_disconnect_cb(*dest_addr)
             await self._close_writer(writer)
 
     def get_request(self,

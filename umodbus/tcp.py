@@ -22,7 +22,7 @@ from .common import ModbusException
 from .modbus import Modbus
 
 # typing not natively supported on MicroPython
-from .typing import Optional, Tuple, List, Union
+from .typing import Optional, Tuple, List, Union, Callable
 
 
 class ModbusTCP(Modbus):
@@ -33,6 +33,22 @@ class ModbusTCP(Modbus):
             TCPServer(),
             addr_list
         )
+        self._setup_extra_callbacks()
+
+    def _setup_extra_callbacks(self) -> None:
+        """Sets up the on_connect and on_disconnect callbacks"""
+
+        extra_callbacks = self._register_dict.get("META", None)
+        if extra_callbacks is None:
+            return
+
+        on_connect_cb = extra_callbacks.get("on_tcp_connect_cb", None)
+        if on_connect_cb is not None:
+            self._itf.set_on_connect_cb(on_connect_cb)
+
+        on_disconnect_cb = extra_callbacks.get("on_tcp_disconnect_cb", None)
+        if on_disconnect_cb is not None:
+            self._itf.set_on_disconnect_cb(on_disconnect_cb)
 
     def bind(self,
              local_ip: str,
@@ -220,6 +236,29 @@ class TCPServer(object):
         self._sock: socket.socket = None
         self._client_sock: socket.socket = None
         self._is_bound = False
+        self._client_address: Tuple[str, int] = None
+        self._on_connect_cb: Optional[Callable[[str, int], None]] = None
+        self._on_disconnect_cb: Optional[Callable[[str, int], None]] = None
+
+    def set_on_connect_cb(self, cb: Callable[[str, int], None]) -> None:
+        """
+        Sets the callback to be called when a client has connected.
+
+        :param      callback:         Callback to be called on client connect.
+        :type       callback:         Callable that takes a pair of (addr, port)
+        """
+
+        self._on_connect_cb = cb
+
+    def set_on_disconnect_cb(self, cb: Callable[[str, int], None]) -> None:
+        """
+        Sets the callback to be called when a client has disconnected.
+
+        :param      callback:         Callback to be called on client disconnect.
+        :type       callback:         Callable that takes a pair of (addr, port)
+        """
+
+        self._on_disconnect_cb = cb
 
     @property
     def is_bound(self) -> bool:
@@ -254,8 +293,7 @@ class TCPServer(object):
         :param      max_connections:  Number of maximum connections
         :type       max_connections:  int
         """
-        if self._client_sock:
-            self._client_sock.close()
+        self._close_client_sockets()
 
         if self._sock:
             self._sock.close()
@@ -336,6 +374,22 @@ class TCPServer(object):
                                                   exception_code)
         self._send(modbus_pdu, slave_addr)
 
+    def _close_client_sockets(self) -> None:
+        """
+        Closes the old client sockets (if any) and 
+        calls the on_disconnect callback (if applicable).
+        """
+
+        if self._client_sock is None:
+            return
+
+        if self._on_disconnect_cb is not None:
+            self._on_disconnect_cb(*self._client_address)
+            self._client_address = None
+
+        self._client_sock.close()
+        self._client_sock = None
+
     def _accept_request(self,
                         accept_timeout: float,
                         unit_addr_list: Optional[List[int]]) -> Optional[Request]:
@@ -352,14 +406,15 @@ class TCPServer(object):
 
         try:
             new_client_sock, client_address = self._sock.accept()
+            self._client_address = client_address
+            if self._on_connect_cb is not None:
+                self._on_connect_cb(*client_address)
         except OSError as e:
             if e.args[0] != 11:     # 11 = timeout expired
                 raise e
 
         if new_client_sock is not None:
-            if self._client_sock is not None:
-                self._client_sock.close()
-
+            self._close_client_sockets()
             self._client_sock = new_client_sock
 
             # recv() timeout, setting to 0 might lead to the following error
@@ -383,14 +438,12 @@ class TCPServer(object):
                 return None
             except Exception as e:
                 print("Modbus request error:", e)
-                self._client_sock.close()
-                self._client_sock = None
+                self._close_client_sockets()
                 return None
 
             if (req_pid != 0):
                 # print("Modbus request error: PID not 0")
-                self._client_sock.close()
-                self._client_sock = None
+                self._close_client_sockets()
                 return None
 
             if ((unit_addr_list is not None) and (req_uid_and_pdu[0] not in unit_addr_list)):
