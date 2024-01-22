@@ -873,43 +873,58 @@ class Modbus(object):
         :param      use_default_vals:  Flag to use dummy default values
         :type       use_default_vals:  Optional[bool]
         """
-        if len(registers):
-            for reg_type, default_val in self._default_vals.items():
-                if reg_type in registers:
-                    for reg, val in registers[reg_type].items():
-                        address = val['register']
+        if not len(registers):
+            return
 
-                        if use_default_vals:
-                            if 'len' in val:
-                                value = [default_val] * val['len']
-                            else:
-                                value = default_val
-                        else:
-                            value = val['val']
+        for reg_type, default_val in self._default_vals.items():
+            if reg_type not in registers:
+                # invalid register type
+                continue
+            for reg, val in registers[reg_type].items():
+                address = val['register']
 
-                        on_set_cb = val.get('on_set_cb', None)
-                        on_get_cb = val.get('on_get_cb', None)
-
-                        if reg_type == Const.COILS:
-                            self.add_coil(address=address,
-                                          value=value,
-                                          on_set_cb=on_set_cb,
-                                          on_get_cb=on_get_cb)
-                        elif reg_type == Const.HREGS:
-                            self.add_hreg(address=address,
-                                          value=value,
-                                          on_set_cb=on_set_cb,
-                                          on_get_cb=on_get_cb)
-                        elif reg_type == Const.ISTS:
-                            self.add_ist(address=address,
-                                         value=value,
-                                         on_get_cb=on_get_cb)   # only getter
-                        elif reg_type == Const.IREGS:
-                            self.add_ireg(address=address,
-                                          value=value,
-                                          on_get_cb=on_get_cb)  # only getter
-                        else:
-                            # invalid register type
-                            pass
+                if use_default_vals:
+                    if 'len' in val:
+                        value = [default_val] * val['len']
+                    else:
+                        value = default_val
                 else:
-                    pass
+                    value = val['val']
+
+                on_set_cb = val.get('on_set_cb', None)
+                on_get_cb = val.get('on_get_cb', None)
+
+                if reg_type == Const.COILS:
+                    self.add_coil(address=address,
+                                    value=value,
+                                    on_set_cb=on_set_cb,
+                                    on_get_cb=on_get_cb)
+                elif reg_type == Const.HREGS:
+                    self.add_hreg(address=address,
+                                    value=value,
+                                    on_set_cb=on_set_cb,
+                                    on_get_cb=on_get_cb)
+                elif reg_type == Const.ISTS:
+                    self.add_ist(address=address,
+                                    value=value,
+                                    on_get_cb=on_get_cb)   # only getter
+                elif reg_type == Const.IREGS:
+                    self.add_ireg(address=address,
+                                    value=value,
+                                    on_get_cb=on_get_cb)  # only getter
+
+        try:
+            extra_callbacks = registers["META"]
+            on_connect_cb = extra_callbacks["on_connect_cb"]
+            self._itf.set_on_connect_cb(on_connect_cb)
+
+            on_disconnect_cb = extra_callbacks["on_disconnect_cb"]
+            self._itf.set_on_disconnect_cb(on_disconnect_cb)
+        except KeyError:
+            # either meta, connect or disconnect cb
+            # undefined in definitions; can ignore
+            pass
+        except AttributeError:
+            # interface does not support on_connect_cb
+            # e.g. RTU; can ignore
+            pass

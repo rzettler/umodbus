@@ -65,13 +65,13 @@ def setup_callbacks(client, register_definitions):
 
         return val not in range(0, 101)
 
-    def my_tcp_connect_cb(address, port):
+    def my_tcp_connect_cb(address):
         print('my_tcp_connect_cb, called after tcp client connects '
-              'with address {} and port {}'.format(address, port))
+              'with address {}'.format(address))
 
-    def my_tcp_disconnect_cb(address, port):
+    def my_tcp_disconnect_cb(address):
         print('my_tcp_disconnect_cb, called just before tcp client disconnects '
-              'with address {} and port {}'.format(address, port))
+              'with address {}'.format(address))
 
     # reset all registers back to their default value with a callback
     register_definitions['COILS']['RESET_REGISTER_DATA_COIL']['on_set_cb'] = \
@@ -101,8 +101,8 @@ def setup_callbacks(client, register_definitions):
         my_discrete_inputs_register_get_cb
 
     register_definitions['META'] = {
-        'on_tcp_connect_cb': my_tcp_connect_cb,
-        'on_tcp_disconnect_cb': my_tcp_disconnect_cb
+        'on_connect_cb': my_tcp_connect_cb,
+        'on_disconnect_cb': my_tcp_disconnect_cb
     }
 
 

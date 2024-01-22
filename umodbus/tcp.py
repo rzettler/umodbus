@@ -33,22 +33,6 @@ class ModbusTCP(Modbus):
             TCPServer(),
             addr_list
         )
-        self._setup_extra_callbacks()
-
-    def _setup_extra_callbacks(self) -> None:
-        """Sets up the on_connect and on_disconnect callbacks"""
-
-        extra_callbacks = self._register_dict.get("META", None)
-        if extra_callbacks is None:
-            return
-
-        on_connect_cb = extra_callbacks.get("on_tcp_connect_cb", None)
-        if on_connect_cb is not None:
-            self._itf.set_on_connect_cb(on_connect_cb)
-
-        on_disconnect_cb = extra_callbacks.get("on_tcp_disconnect_cb", None)
-        if on_disconnect_cb is not None:
-            self._itf.set_on_disconnect_cb(on_disconnect_cb)
 
     def bind(self,
              local_ip: str,
@@ -237,25 +221,25 @@ class TCPServer(object):
         self._client_sock: socket.socket = None
         self._is_bound = False
         self._client_address: Tuple[str, int] = None
-        self._on_connect_cb: Optional[Callable[[str, int], None]] = None
-        self._on_disconnect_cb: Optional[Callable[[str, int], None]] = None
+        self._on_connect_cb: Optional[Callable[[str], None]] = None
+        self._on_disconnect_cb: Optional[Callable[[str], None]] = None
 
-    def set_on_connect_cb(self, cb: Callable[[str, int], None]) -> None:
+    def set_on_connect_cb(self, cb: Callable[[str], None]) -> None:
         """
         Sets the callback to be called when a client has connected.
 
         :param      callback:         Callback to be called on client connect.
-        :type       callback:         Callable that takes a pair of (addr, port)
+        :type       callback:         Callable that takes an (addr)
         """
 
         self._on_connect_cb = cb
 
-    def set_on_disconnect_cb(self, cb: Callable[[str, int], None]) -> None:
+    def set_on_disconnect_cb(self, cb: Callable[[str], None]) -> None:
         """
         Sets the callback to be called when a client has disconnected.
 
         :param      callback:         Callback to be called on client disconnect.
-        :type       callback:         Callable that takes a pair of (addr, port)
+        :type       callback:         Callable that takes an (addr)
         """
 
         self._on_disconnect_cb = cb
@@ -384,7 +368,7 @@ class TCPServer(object):
             return
 
         if self._on_disconnect_cb is not None:
-            self._on_disconnect_cb(*self._client_address)
+            self._on_disconnect_cb(self._client_address)
             self._client_address = None
 
         self._client_sock.close()
@@ -406,9 +390,11 @@ class TCPServer(object):
 
         try:
             new_client_sock, client_address = self._sock.accept()
+            client_address = socket.inet_ntop(socket.AF_INET,
+                                              client_address)
             self._client_address = client_address
             if self._on_connect_cb is not None:
-                self._on_connect_cb(*client_address)
+                self._on_connect_cb(client_address)
         except OSError as e:
             if e.args[0] != 11:     # 11 = timeout expired
                 raise e
