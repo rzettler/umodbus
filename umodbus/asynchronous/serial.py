@@ -234,7 +234,6 @@ class AsyncRTUServer(CommonAsyncRTUFunctions, RTUServer):
         :type       request:     AsyncRequest, optional
         """
 
-        #print("async RTU: calling send_response()")
         task = super().send_response(slave_addr=slave_addr,
                                      function_code=function_code,
                                      request_register_addr=request_register_addr,  # noqa: E501
@@ -242,7 +241,6 @@ class AsyncRTUServer(CommonAsyncRTUFunctions, RTUServer):
                                      request_data=request_data,
                                      values=values,
                                      signed=signed)
-        #print("async RTU: send_response() called, task is:", task)
         if task is not None:
             await task
 
@@ -261,11 +259,9 @@ class AsyncRTUServer(CommonAsyncRTUFunctions, RTUServer):
         :type       request:     AsyncRequest, optional
         """
 
-        #print("async RTU: calling send_exception_response()")
         task = super().send_exception_response(slave_addr=slave_addr,
                                                function_code=function_code,
                                                exception_code=exception_code)
-        #print("async RTU: called send_exception_response(), task is:", task)
         if task is not None:
             await task
 

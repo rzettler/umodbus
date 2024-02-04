@@ -204,7 +204,6 @@ class Modbus(object):
                 _cb = self._register_dict[reg_type][address]['on_get_cb']
                 _cb(reg_type=reg_type, address=address, val=vals)
 
-            #print("creating response...", type(self).__name__, "->", type(request).__name__)
             vals = self._create_response(request=request, reg_type=reg_type)
             return request.send_response(vals)
         else:
