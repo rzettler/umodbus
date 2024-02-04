@@ -26,7 +26,8 @@ from ..tcp import CommonTCPFunctions, TCPServer
 # typing not natively supported on MicroPython
 from ..typing import Optional, Tuple, List
 from ..typing import Callable, Coroutine, Any, Dict
-
+# in case inet_ntop not natively supported on Micropython
+from ..compat_utils import inet_ntop
 
 class AsyncModbusTCP(AsyncModbus):
     """
@@ -271,8 +272,8 @@ class AsyncTCPServer(TCPServer):
 
         try:
             header_len = Const.MBAP_HDR_LENGTH - 1
-            dest_addr = socket.inet_ntop(socket.AF_INET,
-                                         writer.get_extra_info('peername'))
+            dest_addr = inet_ntop(socket.AF_INET,
+                                  writer.get_extra_info('peername'))
             if self._on_connect_cb is not None:
                 self._on_connect_cb(dest_addr)
 

@@ -23,7 +23,8 @@ from .modbus import Modbus
 
 # typing not natively supported on MicroPython
 from .typing import Optional, Tuple, List, Union, Callable
-
+# in case inet_ntop not natively supported on Micropython
+from .compat_utils import inet_ntop
 
 class ModbusTCP(Modbus):
     """Modbus TCP client class"""
@@ -390,8 +391,8 @@ class TCPServer(object):
 
         try:
             new_client_sock, client_address = self._sock.accept()
-            client_address = socket.inet_ntop(socket.AF_INET,
-                                              client_address)
+            client_address = inet_ntop(socket.AF_INET,
+                                       client_address)
             self._client_address = client_address
             if self._on_connect_cb is not None:
                 self._on_connect_cb(client_address)
