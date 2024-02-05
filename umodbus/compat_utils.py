@@ -8,6 +8,7 @@
 # available at https://www.pycom.io/opensource/licensing
 #
 # compatibility for ports which do not have inet_ntop available
+# from https://github.com/micropython/micropython/issues/8877#issuecomment-1178674681
 
 try:
     from socket import inet_ntop
