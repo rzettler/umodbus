@@ -124,14 +124,18 @@ async def update_register_definitions(register_definitions, *servers):
     """
 
     IREG = register_definitions['IREGS']['EXAMPLE_IREG']
+    address = IREG['register']
     while True:
         value = random.randrange(1, 1000)
         print("Updating value to: ", value)
-        # note: the below line can be omitted since it doesn't (yet) update
-        # the servers' register definitions - it is just kept for consistency
-        IREG['val'][1] = value
         for server in servers:
-            server.set_ireg(address=IREG['register'], value=value)
+            curr_values = server.get_ireg(address)
+            if isinstance(curr_values, list):
+                curr_values[1] = value
+            else:
+                curr_values = value
+            server.set_ireg(address=address, value=curr_values)
+            
         await asyncio.sleep(5)
 
 
