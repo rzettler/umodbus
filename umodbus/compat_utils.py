@@ -14,11 +14,12 @@ try:
     from socket import inet_ntop
 except ImportError:
     import socket
+
     def inet_ntop(type: int, packed_ip: bytes) -> str:
         if type == socket.AF_INET:
             return ".".join(map(str, packed_ip))
         elif type == socket.AF_INET6:
-            iterator = zip(*[iter(packed_ip)]*2)
+            iterator = zip(*[iter(packed_ip)] * 2)
             ipv6_addr = []
             for high, low in iterator:
                 ipv6_addr.append(f"{high << 8 | low:04x}")

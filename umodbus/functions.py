@@ -51,9 +51,9 @@ def read_discrete_inputs(starting_address: int, quantity: int) -> bytes:
         raise ValueError('Invalid number of discrete inputs')
 
     return struct.pack('>BHH',
-                Const.READ_DISCRETE_INPUTS,
-                starting_address,
-                quantity)
+                       Const.READ_DISCRETE_INPUTS,
+                       starting_address,
+                       quantity)
 
 
 def read_holding_registers(starting_address: int, quantity: int) -> bytes:
@@ -72,9 +72,9 @@ def read_holding_registers(starting_address: int, quantity: int) -> bytes:
         raise ValueError('Invalid number of holding registers')
 
     return struct.pack('>BHH',
-                Const.READ_HOLDING_REGISTERS,
-                starting_address,
-                quantity)
+                       Const.READ_HOLDING_REGISTERS,
+                       starting_address,
+                       quantity)
 
 
 def read_input_registers(starting_address: int, quantity: int) -> bytes:
@@ -93,9 +93,9 @@ def read_input_registers(starting_address: int, quantity: int) -> bytes:
         raise ValueError('Invalid number of input registers')
 
     return struct.pack('>BHH',
-                Const.READ_INPUT_REGISTER,
-                starting_address,
-                quantity)
+                       Const.READ_INPUT_REGISTER,
+                       starting_address,
+                       quantity)
 
 
 def write_single_coil(output_address: int,
@@ -121,9 +121,9 @@ def write_single_coil(output_address: int,
             output_value = 0x0000
 
     return struct.pack('>BHH',
-                Const.WRITE_SINGLE_COIL,
-                output_address,
-                output_value)
+                       Const.WRITE_SINGLE_COIL,
+                       output_address,
+                       output_value)
 
 
 def write_single_register(register_address: int,
@@ -145,9 +145,9 @@ def write_single_register(register_address: int,
     fmt = 'h' if signed else 'H'
 
     return struct.pack('>BH' + fmt,
-                Const.WRITE_SINGLE_REGISTER,
-                register_address,
-                register_value)
+                       Const.WRITE_SINGLE_REGISTER,
+                       register_address,
+                       register_value)
 
 
 def write_multiple_coils(starting_address: int,
@@ -184,11 +184,11 @@ def write_multiple_coils(starting_address: int,
         byte_count += 1
 
     return struct.pack('>BHHB' + fmt,
-                Const.WRITE_MULTIPLE_COILS,
-                starting_address,
-                quantity,
-                byte_count,
-                *output_value)
+                       Const.WRITE_MULTIPLE_COILS,
+                       starting_address,
+                       quantity,
+                       byte_count,
+                       *output_value)
 
 
 def write_multiple_registers(starting_address: int,
@@ -215,11 +215,11 @@ def write_multiple_registers(starting_address: int,
     fmt = ('h' if signed else 'H') * quantity
 
     return struct.pack('>BHHB' + fmt,
-                Const.WRITE_MULTIPLE_REGISTERS,
-                starting_address,
-                quantity,
-                byte_count,
-                *register_values)
+                       Const.WRITE_MULTIPLE_REGISTERS,
+                       starting_address,
+                       quantity,
+                       byte_count,
+                       *register_values)
 
 
 def validate_resp_data(data: bytes,
@@ -314,9 +314,9 @@ def response(function_code: int,
 
         fmt = 'B' * len(output_value)
         return struct.pack('>BB' + fmt,
-                    function_code,
-                    ((len(value_list) - 1) // 8) + 1,
-                    *output_value)
+                           function_code,
+                           ((len(value_list) - 1) // 8) + 1,
+                           *output_value)
 
     elif function_code in [Const.READ_HOLDING_REGISTERS,
                            Const.READ_INPUT_REGISTER]:
@@ -333,23 +333,23 @@ def response(function_code: int,
                 fmt += 'h' if s else 'H'
 
         return struct.pack('>BB' + fmt,
-                    function_code,
-                    quantity * 2,
-                    *value_list)
+                           function_code,
+                           quantity * 2,
+                           *value_list)
 
     elif function_code in [Const.WRITE_SINGLE_COIL,
                            Const.WRITE_SINGLE_REGISTER]:
         return struct.pack('>BHBB',
-                    function_code,
-                    request_register_addr,
-                    *request_data)
+                           function_code,
+                           request_register_addr,
+                           *request_data)
 
     elif function_code in [Const.WRITE_MULTIPLE_COILS,
                            Const.WRITE_MULTIPLE_REGISTERS]:
         return struct.pack('>BHH',
-                    function_code,
-                    request_register_addr,
-                    request_register_qty)
+                           function_code,
+                           request_register_addr,
+                           request_register_qty)
 
     return b''
 

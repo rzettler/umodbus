@@ -26,6 +26,7 @@ from .typing import Optional, Tuple, List, Union, Callable
 # in case inet_ntop not natively supported on Micropython
 from .compat_utils import inet_ntop
 
+
 class ModbusTCP(Modbus):
     """Modbus TCP client class"""
     def __init__(self, addr_list: Optional[List[int]] = None):
@@ -361,7 +362,7 @@ class TCPServer(object):
 
     def _close_client_sockets(self) -> None:
         """
-        Closes the old client sockets (if any) and 
+        Closes the old client sockets (if any) and
         calls the on_disconnect callback (if applicable).
         """
 

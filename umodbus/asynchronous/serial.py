@@ -98,7 +98,7 @@ class CommonAsyncRTUFunctions(CommonRTUFunctions):
     async def _uart_read_frame(self,
                                timeout: Optional[int] = None) -> bytearray:
         """@see RTUServer._uart_read_frame"""
-        t1char_ms = max(2, self._t1char//1000)
+        t1char_ms = max(2, self._t1char // 1000)
 
         # Wait here till the next frame starts
         while not self._uart.any():

@@ -135,7 +135,7 @@ async def update_register_definitions(register_definitions, *servers):
             else:
                 curr_values = value
             server.set_ireg(address=address, value=curr_values)
-            
+
         await asyncio.sleep(5)
 
 
