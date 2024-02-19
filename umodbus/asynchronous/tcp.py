@@ -29,6 +29,7 @@ from ..typing import Callable, Coroutine, Any, Dict
 # in case inet_ntop not natively supported on Micropython
 from ..compat_utils import inet_ntop
 
+
 class AsyncModbusTCP(AsyncModbus):
     """
     Asynchronous equivalent of ModbusTCP class.
