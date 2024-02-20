@@ -3,7 +3,7 @@
 
 """
 Defines the callbacks for synchronizing register definitions
-for multiple async servers. 
+for multiple async servers.
 
 Warning: This is a workaround for the case where register
 definitions are not shared. Do not use these if they are

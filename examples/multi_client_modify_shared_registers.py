@@ -22,8 +22,13 @@ except ImportError:
     import asyncio
 import random
 
-# extend multi client example by importing everything from it
-from examples.multi_client_example import *
+# extend multi client example by importing from it
+from examples.multi_client_example import init_tcp_server, init_rtu_server
+from examples.multi_client_example import register_definitions
+from examples.multi_client_example import local_ip, tcp_port
+from examples.multi_client_example import slave_addr, rtu_pins
+from examples.multi_client_example import baudrate, uart_id, exit
+from examples.multi_client_example import sync_registers
 
 
 async def update_register_definitions(register_definitions, servers):
@@ -48,7 +53,7 @@ async def update_register_definitions(register_definitions, servers):
         await asyncio.sleep(5)
 
 
-async def start_servers(*server_tasks) -> None:
+async def start_all_servers(*server_tasks) -> None:
     """
     Creates a TCP and RTU server with the given parameters, and
     starts a background task that updates their EXAMPLE_IREG registers
@@ -79,7 +84,7 @@ if __name__ == "__main__":
                                       uart_id=uart_id)        # optional, default 1, see port specific docs
 
     # combine and run tasks together
-    run_servers = start_servers(tcp_server_task, rtu_server_task)
+    run_servers = start_all_servers(tcp_server_task, rtu_server_task)
     asyncio.run(run_servers)
 
     exit()

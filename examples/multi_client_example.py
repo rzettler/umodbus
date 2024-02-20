@@ -26,7 +26,6 @@ except ImportError:
 # import modbus client classes
 from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
-from examples.common.register_definitions import setup_callbacks
 from examples.common.tcp_client_common import register_definitions
 from examples.common.tcp_client_common import local_ip, tcp_port
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
