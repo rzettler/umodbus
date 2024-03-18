@@ -26,7 +26,7 @@ except ImportError:
 # import modbus client classes
 from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
-from examples.common.tcp_client_common import register_definitions
+from examples.common.register_definitions import register_definitions
 from examples.common.tcp_client_common import local_ip, tcp_port
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
 from examples.common.rtu_client_common import slave_addr, rtu_pins
@@ -85,8 +85,8 @@ if __name__ == "__main__":
     tcp_server_task = init_tcp_server(local_ip, tcp_port, backlog)
 
     # create RTU server task
-    rtu_server_task = init_rtu_server(addr=slave_addr,
-                                      pins=rtu_pins,          # given as tuple (TX, RX)
+    rtu_server_task = init_rtu_server(slave_addr=slave_addr,
+                                      rtu_pins=rtu_pins,      # given as tuple (TX, RX)
                                       baudrate=baudrate,      # optional, default 9600
                                       # data_bits=8,          # optional, default 8
                                       # stop_bits=1,          # optional, default 1
