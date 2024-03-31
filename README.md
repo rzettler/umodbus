@@ -41,9 +41,9 @@ This is a quickstart to install the `micropython-modbus` library on a
 MicroPython board.
 
 A more detailed guide of the development environment can be found in
-[SETUP](SETUP.md), further details about the usage can be found in
-[USAGE](USAGE.md), descriptions for testing can be found in
-[TESTING](TESTING.md) and several examples in [EXAMPLES](EXAMPLES.md)
+[SETUP](docs/SETUP.md), further details about the usage can be found in
+[USAGE](docs/USAGE.md), descriptions for testing can be found in
+[TESTING](docs/TESTING.md) and several examples in [EXAMPLES](docs/EXAMPLES.md)
 
 ```bash
 python3 -m venv .venv
@@ -100,7 +100,7 @@ After a successful installation of the package and reboot of the system as
 described in the [installation section](#install-package-on-board-with-pip)
 the following commands can be used to request a coil state of a target/client
 device. Further usage examples can be found in the
-[examples folder][ref-examples-folder] and in the [USAGE chapter](USAGE.md)
+[examples folder][ref-examples-folder] and in the [USAGE chapter](docs/USAGE.md)
 
 #### TCP
 
@@ -177,11 +177,11 @@ upip.install('micropython-brainelectronics-helpers')
 
 Check also the README of the
 [brainelectronics MicroPython modules][ref-github-be-mircopython-modules], the
-[INSTALLATION](INSTALLATION.md) and the [SETUP](SETUP.md) guides.
+[INSTALLATION](docs/INSTALLATION.md) and the [SETUP](docs/SETUP.md) guides.
 
 ## Usage
 
-See [USAGE](USAGE.md) and [DOCUMENTATION](DOCUMENTATION.md)
+See [USAGE](docs/USAGE.md) and [DOCUMENTATION](docs/DOCUMENTATION.md)
 
 ## Supported Modbus functions
 
