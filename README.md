@@ -105,7 +105,7 @@ device. Further usage examples can be found in the
 #### TCP
 
 ```python
-from ummodbus.tcp import ModbusTCPMaster
+from umodbus.tcp import ModbusTCPMaster
 
 tcp_device = ModbusTCPMaster(
     slave_ip='172.24.0.2',  # IP address of the target/client/slave device
