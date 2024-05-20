@@ -22,16 +22,102 @@ except ImportError:
     import asyncio
 import random
 
-# extend multi client example by importing from it
-from examples.multi_client_example import init_tcp_server, init_rtu_server
-from examples.multi_client_example import register_definitions
-from examples.multi_client_example import local_ip, tcp_port
-from examples.multi_client_example import slave_addr, rtu_pins
-from examples.multi_client_example import baudrate, uart_id, exit
-from examples.multi_client_example import sync_registers
+# import modbus client classes
+from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
+from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
+from examples.common.register_definitions import setup_callbacks
+from examples.common.tcp_client_common import register_definitions
+from examples.common.tcp_client_common import local_ip, tcp_port
+from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
+from examples.common.rtu_client_common import slave_addr, rtu_pins
+from examples.common.rtu_client_common import baudrate, uart_id, exit
+from umodbus.typing import Tuple, Dict, Any
 
 
-async def update_register_definitions(register_definitions, servers):
+async def start_rtu_server(slave_addr,
+                           rtu_pins,
+                           baudrate,
+                           uart_id,
+                           **kwargs) -> Tuple[ModbusRTU, asyncio.Task]:
+    """Creates an RTU client and runs tests"""
+
+    client = ModbusRTU(addr=slave_addr,
+                       pins=rtu_pins,
+                       baudrate=baudrate,
+                       uart_id=uart_id,
+                       **kwargs)
+
+    if IS_DOCKER_MICROPYTHON:
+        # works only with fake machine UART
+        assert client._itf._uart._is_server is True
+
+    # start listening in background
+    await client.bind()
+
+    print('Setting up RTU registers ...')
+    # use the defined values of each register type provided by register_definitions
+    client.setup_registers(registers=register_definitions)
+    # alternatively use dummy default values (True for bool regs, 999 otherwise)
+    # client.setup_registers(registers=register_definitions, use_default_vals=True)
+    print('RTU Register setup done')
+
+    # create a task, since we want the server to run in the background but also
+    # want it to be able to stop anytime we want (by manipulating the server)
+    task = asyncio.create_task(client.serve_forever())
+
+    # we can stop the task by asking the server to stop
+    # but verify it's done by querying task
+    return client, task
+
+
+async def start_tcp_server(host, port, backlog) -> Tuple[ModbusTCP, asyncio.Task]:
+    client = ModbusTCP()  # TODO: rename to `server`
+    await client.bind(local_ip=host, local_port=port, max_connections=backlog)
+
+    print('Setting up TCP registers ...')
+    # only one server for now can have callbacks setup for it
+    setup_callbacks(client, register_definitions)
+    # use the defined values of each register type provided by register_definitions
+    client.setup_registers(registers=register_definitions)
+    # alternatively use dummy default values (True for bool regs, 999 otherwise)
+    # client.setup_registers(registers=register_definitions, use_default_vals=True)
+    print('TCP Register setup done')
+
+    print('Serving as TCP client on {}:{}'.format(local_ip, tcp_port))
+
+    # create a task, since we want the server to run in the background but also
+    # want it to be able to stop anytime we want (by manipulating the server)
+    task = asyncio.create_task(client.serve_forever())
+
+    # we can stop the task by asking the server to stop
+    # but verify it's done by querying task
+    return client, task
+
+
+async def create_servers(parameters: Dict[str, Any]) -> Tuple[Tuple[ModbusTCP, ModbusRTU],
+                                                              Tuple[asyncio.Task, asyncio.Task]]:
+    """Creates TCP and RTU servers based on the supplied parameters."""
+
+    # create TCP server task
+    tcp_server, tcp_task = await start_tcp_server(parameters['local_ip'],
+                                                  parameters['tcp_port'],
+                                                  parameters['backlog'])
+
+    # create RTU server task
+    rtu_server, rtu_task = await start_rtu_server(addr=parameters['slave_addr'],
+                                                  pins=parameters['rtu_pins'],            # given as tuple (TX, RX)
+                                                  baudrate=parameters['baudrate'],        # optional, default 9600
+                                                  # data_bits=8,                          # optional, default 8
+                                                  # stop_bits=1,                          # optional, default 1
+                                                  # parity=None,                          # optional, default None
+                                                  # ctrl_pin=12,                          # optional, control DE/RE
+                                                  uart_id=parameters['uart_id'])          # optional, default 1, see port specific docs
+
+    # combine both tasks
+    return (tcp_server, rtu_server), (tcp_task, rtu_task)
+
+
+async def update_register_definitions(register_definitions, *servers):
     """
     Updates the EXAMPLE_IREG register every 5 seconds
     to a random value for the given servers.
@@ -53,38 +139,40 @@ async def update_register_definitions(register_definitions, servers):
         await asyncio.sleep(5)
 
 
-async def start_all_servers(*server_tasks) -> None:
+async def start_servers(params) -> None:
     """
     Creates a TCP and RTU server with the given parameters, and
     starts a background task that updates their EXAMPLE_IREG registers
     every 5 seconds, which should be visible to any clients that connect.
     """
 
-    all_servers = await asyncio.gather(*server_tasks)
-    sync_registers(register_definitions, *all_servers)
-    background_task = update_register_definitions(register_definitions, all_servers)
-    await asyncio.gather(background_task, *[server.serve_forever() for server in all_servers])
+    (tcp_server, rtu_server), (tcp_task, rtu_task) = await create_servers(params)
 
+    """
+    # settings for server can be loaded from a json file like so
+    import json
 
-if __name__ == "__main__":
-    # define arbitrary backlog of 10
-    backlog = 10
+    with open('registers/example.json', 'r') as file:
+        new_params = json.load(file)
 
-    # create TCP server task
-    tcp_server_task = init_tcp_server(local_ip, tcp_port, backlog)
+    # but for now, just look up parameters defined directly in code
+    """
 
-    # create RTU server task
-    rtu_server_task = init_rtu_server(slave_addr=slave_addr,
-                                      rtu_pins=rtu_pins,      # given as tuple (TX, RX)
-                                      baudrate=baudrate,      # optional, default 9600
-                                      # data_bits=8,          # optional, default 8
-                                      # stop_bits=1,          # optional, default 1
-                                      # parity=None,          # optional, default None
-                                      # ctrl_pin=12,          # optional, control DE/RE
-                                      uart_id=uart_id)        # optional, default 1, see port specific docs
+    background_task = update_register_definitions(register_definitions,
+                                                  tcp_server, rtu_server)
 
-    # combine and run tasks together
-    run_servers = start_all_servers(tcp_server_task, rtu_server_task)
-    asyncio.run(run_servers)
+    await asyncio.gather(tcp_task, rtu_task, background_task)
 
-    exit()
+params = {
+    "local_ip": local_ip,
+    "tcp_port": tcp_port,
+    "backlog": 10,
+    "slave_addr": slave_addr,
+    "rtu_pins": rtu_pins,
+    "baudrate": baudrate,
+    "uart_id": uart_id
+}
+
+asyncio.run(start_servers(params=params))
+
+exit()

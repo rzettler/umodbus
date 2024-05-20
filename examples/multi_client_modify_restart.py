@@ -31,7 +31,7 @@ except ImportError:
 from umodbus.asynchronous.tcp import AsyncModbusTCP as ModbusTCP
 from umodbus.asynchronous.serial import AsyncModbusRTU as ModbusRTU
 from examples.common.register_definitions import setup_callbacks
-from examples.common.register_definitions import register_definitions
+from examples.common.tcp_client_common import register_definitions
 from examples.common.tcp_client_common import local_ip, tcp_port
 from examples.common.rtu_client_common import IS_DOCKER_MICROPYTHON
 from examples.common.rtu_client_common import slave_addr, rtu_pins
@@ -109,8 +109,8 @@ async def create_servers(parameters: Dict[str, Any]) -> Tuple[Tuple[ModbusTCP, M
                                                   parameters['backlog'])
 
     # create RTU server task
-    rtu_server, rtu_task = await start_rtu_server(slave_addr=parameters['slave_addr'],
-                                                  rtu_pins=parameters['rtu_pins'],        # given as tuple (TX, RX)
+    rtu_server, rtu_task = await start_rtu_server(addr=parameters['slave_addr'],
+                                                  pins=parameters['rtu_pins'],            # given as tuple (TX, RX)
                                                   baudrate=parameters['baudrate'],        # optional, default 9600
                                                   # data_bits=8,                          # optional, default 8
                                                   # stop_bits=1,                          # optional, default 1
