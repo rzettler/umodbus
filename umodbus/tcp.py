@@ -425,7 +425,7 @@ class TCPServer(object):
                 # print("Socket OSError aka TimeoutError: {}".format(e))
                 return None
             except Exception as e:
-                print("Modbus request error:", e)
+                # print("Modbus request error:", e)
                 self._close_client_sockets()
                 return None
 

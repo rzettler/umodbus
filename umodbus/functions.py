@@ -430,7 +430,7 @@ def float_to_bin(num: float) -> bin:
     :rtype:     bin
     """
     # no "zfill" available in MicroPython
-    # return bin(struct.struct.unpack('!I', struct.struct.pack('!f', num))[0])[2:].zfill(32)
+    # return bin(struct.unpack('!I', struct.pack('!f', num))[0])[2:].zfill(32)
 
     return '{:0>{w}}'.format(
         bin(struct.unpack('!I', struct.pack('!f', num))[0])[2:],
