@@ -15,6 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 <!-- ## [Unreleased] -->
 
 ## Released
+## [3.0.0] - 2024-07-01
+### Added
+- Add support for async TCP and RTU client and server, see #5
+- Add `CommonRTUFunctions` class to [serial.py](umodbus/serial.py) as an abstract class for use by the RTU client and server
+- Add `Async` versions of existing synchronous classes (e.g. `AsyncModbusRTU`, `AsyncTCP`, etc.)
+
+### Changed
+- `ists`, `iregs`, `coils` and `hregs` use the type `KeysView` instead of `dict_keys`
+- `Serial` class cleaned up, now mainly for requesting data from Modbus RTU masters (e.g. from `ModbusRTU`)
+- Refactor examples, now examples need the `common` directory contents to be present as well to run
+
 ## [2.3.7] - 2023-07-19
 ### Fixed
 - Add a single character wait time after flush to avoid timing issues with RTU control pin, see #68 and #72
