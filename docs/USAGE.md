@@ -389,7 +389,7 @@ multiple coil states can be set at once.
 coil_address = 126          # register to start writing
 new_coil_vals = [1, 1, 0]   # new coil values for 126, 127 and 128
 
-operation_status = self._host.write_multiple_coils(
+operation_status = host.write_multiple_coils(
             slave_addr=slave_addr,
             starting_address=coil_address,
             output_values=new_coil_vals)
@@ -503,7 +503,7 @@ holding register can be set at once.
 hreg_address = 94                   # register to start writing
 new_hreg_vals = [54, -12, 30001]    # new holding register values for 94, 95, 96
 
-operation_status = self._host.write_multiple_registers(
+operation_status = host.write_multiple_registers(
     slave_addr=slave_addr,
     starting_address=hreg_address,
     register_values=new_hreg_vals,
