@@ -2,7 +2,7 @@
     "urls": [
         [
             "umodbus/__init__.py",
-            "github:brainelectronics/micropython-modbus/umodbus/__init__.py"
+            "github:rzettler/umodbus/umodbus/__init__.py"
         ],
         [
             "umodbus/common.py",
