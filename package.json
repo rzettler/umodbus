@@ -22,7 +22,7 @@
         ],
         [
             "umodbus/serial.py",
-            "github:brainelectronics/micropython-modbus/umodbus/serial.py"
+            "github:rzettler/umodbus/umodbus/umodbus/serial.py"
         ],
         [
             "umodbus/tcp.py",
